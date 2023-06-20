@@ -31,7 +31,7 @@ export class AuthService {
     }
   };
   
-  claims(): any {
+  get claims(): any {
     return this.oauthService.getIdentityClaims() as any;
   }
 

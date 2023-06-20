@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../features/header.component';
 import { MenuComponent } from '../features/menu.component';
 import { FooterComponent } from '../features/footer.component';
-import { Router, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-default',

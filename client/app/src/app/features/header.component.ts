@@ -233,9 +233,9 @@ export class HeaderComponent {
     private authService: AuthService
   ) {  }
 
-  get isLoggedIn(): boolean {
-    return this.authService.isLoggedIn();
-  }
+get isLoggedIn(): boolean {
+  return this.authService.isLoggedIn();
+}
 
   loginOrLogout(): void {
     this.authService.handleLoginClick();
