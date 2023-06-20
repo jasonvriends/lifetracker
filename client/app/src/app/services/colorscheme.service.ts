@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class ColorschemeService {
+export class ColorSchemeService {
 
   private isDarkModeSubject: BehaviorSubject<boolean>;
   public isDarkMode$: Observable<boolean>;

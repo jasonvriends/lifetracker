@@ -18,20 +18,20 @@ export class AuthService {
     this.oauthService.loadDiscoveryDocumentAndTryLogin();
   }
 
-  get isLoggedIn(): boolean {
+  isLoggedIn(): boolean {
     const idToken = this.oauthService.getIdToken();
     return !!idToken;
   }
   
   handleLoginClick = () => {
-    if (this.isLoggedIn) {
+    if (this.isLoggedIn()) {
       return this.oauthService.logOut();
     } else {
       return this.oauthService.initLoginFlow();
     }
   };
   
-  get claims(): any {
+  claims(): any {
     return this.oauthService.getIdentityClaims() as any;
   }
 
