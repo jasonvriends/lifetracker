@@ -15,6 +15,13 @@ export const routes: Routes = [
   },
   
   // Fullpage layout
+  { 
+    path: '**', 
+    loadComponent : () => import('../app/layouts/fullpage.component').then(c => c.FullpageComponent),
+    children: [
+      { path: '**', loadComponent : () => import('../app/pages/pagenotfound.component').then(c => c.PagenotfoundComponent), pathMatch: 'full'},
+    ]
+  },
 
 ];
 

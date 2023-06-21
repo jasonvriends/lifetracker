@@ -45,6 +45,37 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           </li>
           <li
             class="nav-item"
+            [routerLink]="['/about']"
+            [routerLinkActive]="['active']"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <a class="nav-link" href="/about">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"
+                ><!-- Download SVG icon from http://tabler-icons.io/i/home -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="icon icon-tabler icon-tabler-layout-dashboard"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M4 4h6v8h-6z"></path>
+                  <path d="M4 16h6v4h-6z"></path>
+                  <path d="M14 12h6v8h-6z"></path>
+                  <path d="M14 4h6v4h-6z"></path>
+                </svg>
+              </span>
+              <span class="nav-link-title"> About </span>
+            </a>
+          </li>          
+          <li
+            class="nav-item"
             [routerLink]="['/dashboard']"
             [routerLinkActive]="['active']"
             [routerLinkActiveOptions]="{ exact: true }"

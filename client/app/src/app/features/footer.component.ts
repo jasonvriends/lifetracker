@@ -12,13 +12,13 @@ import { CommonModule } from '@angular/common';
       <ul class="list-inline list-inline-dots mb-0">
         <li class="list-inline-item">
           <a
-            href="https://github.com/jasonvriends/lifetracker-frontend"
+            href="/privacy"
             target="_blank"
             class="link-secondary"
             rel="noopener"
-            >Source code</a
+            >Privacy Policy</a
           >
-        </li>
+        </li>     
       </ul>
     </div>
     <div class="col-12 col-lg-auto mt-3 mt-lg-0">

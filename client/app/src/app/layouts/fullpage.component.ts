@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-fullpage',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterOutlet],
   template: `
-    <p>
-      fullpage works!
-    </p>
+    <div class="page page-center">
+      <router-outlet></router-outlet>
+    </div>
   `,
   styles: [
   ]

@@ -143,7 +143,6 @@ import { ColorSchemeService } from '../services/colorscheme.service';
         </a>
 
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-          <a href="#" class="dropdown-item">Dashboard</a>
           <a href="./settings.html" class="dropdown-item">Settings</a>
           <div class="dropdown-divider"></div>
           <a
