@@ -8,7 +8,7 @@ on:
     branches:
       - main
     paths:
-      - client/app/**            
+      - client/app/**
   workflow_dispatch:
 
 jobs:
@@ -21,13 +21,14 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v1
         with:
-          node-version: '18.x'
+          node-version: "18.x"
 
       - name: npm install, build, and test
         run: |
           cd client/app
+          npm install -g @angular/cli
           npm install
-          npm run build --if-present
+          ng build --configuration=production
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
@@ -39,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Production'
+      name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -48,11 +49,11 @@ jobs:
         with:
           name: node-app
 
-      - name: 'Deploy to Azure Web App'
+      - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'lifetracker'
-          slot-name: 'Production'
+          app-name: "lifetracker"
+          slot-name: "Production"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A56F24D35048428DB8D50FECE3167C9C }}
           package: .
