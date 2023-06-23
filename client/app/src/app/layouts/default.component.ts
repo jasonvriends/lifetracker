@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { ColorSchemeService } from '../services/colorscheme.service.ts';
+import { ColorSchemeService } from '../services/colorscheme.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
