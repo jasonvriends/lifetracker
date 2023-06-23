@@ -10,9 +10,7 @@ from config.settings import app_configs, settings
 app = FastAPI(**app_configs)
 
 # Define the CORS client origin
-origins = [
-    settings.CLIENT_ORIGIN,
-]
+origins = settings.CLIENT_ORIGIN
 
 # Add CORSMiddleware to the FastAPI app
 app.add_middleware(
