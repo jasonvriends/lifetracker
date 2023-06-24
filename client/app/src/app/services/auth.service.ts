@@ -35,4 +35,8 @@ export class AuthService {
     return this.oauthService.getIdentityClaims() as any;
   }
 
+  get accessToken(): string {
+    return this.oauthService.getAccessToken();
+  }
+
 }

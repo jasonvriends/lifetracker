@@ -7,14 +7,13 @@ import { AuthService } from './services/auth.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     ColorSchemeService,
     provideHttpClient(),
     provideOAuthClient(),
-    AuthService    ,
-    CookieConsentService
+    AuthService,
+    CookieConsentService,
   ]
 };

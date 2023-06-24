@@ -6,7 +6,7 @@ import { CookieConsentService } from '../services/cookieconsent.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
-  selector: 'app-default',
+  selector: 'layout-default',
   standalone: true,
   imports: [CommonModule, RouterOutlet],
   template: `
@@ -71,13 +71,13 @@ import { AuthService } from '../services/auth.service';
                 <li class="nav-item active">
                   <a class="nav-link" href="./">
                     <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler-icons.io/i/home -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-   <path d="M4 4h6v8h-6z"></path>
-   <path d="M4 16h6v4h-6z"></path>
-   <path d="M14 12h6v8h-6z"></path>
-   <path d="M14 4h6v4h-6z"></path>
-</svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 4h6v8h-6z"></path>
+                        <path d="M4 16h6v4h-6z"></path>
+                        <path d="M14 12h6v8h-6z"></path>
+                        <path d="M14 4h6v4h-6z"></path>
+                      </svg>
                     </span>
                     <span class="nav-link-title">
                       Dashboard
@@ -101,7 +101,7 @@ import { AuthService } from '../services/auth.service';
             <div class="container">
               <div class="row align-items-center">
                 <div class="col">
-                  <strong>Do you like cookies?</strong> 🍪 We use cookies to ensure you get the best experience on our website. <a href="/privacy" target="_blank">Learn more</a>
+                  <strong>Do you like cookies?</strong> 🍪 We use cookies on this site to improve your experience as explained in our Cookie Policy. You can reject cookies by changing your browser settings. <a href="/privacy" target="_blank">Learn more</a>
                 </div>
                 <div class="col-auto">
                   <button (click)="setConsent(true)" type="button" class="btn btn-primary" data-bs-dismiss="offcanvas">
@@ -119,14 +119,14 @@ import { AuthService } from '../services/auth.service';
             <div class="row text-center align-items-center flex-row-reverse">
               <div class="col-lg-auto ms-lg-auto">
                 <ul class="list-inline list-inline-dots mb-0">
-                  <li class="list-inline-item"><a href="" target="_blank" class="link-secondary" rel="noopener">Privacy Policy</a></li>
+                  <li class="list-inline-item"><a href="/privacy" target="_blank" class="link-secondary" rel="noopener">Privacy & Cookies</a></li>
                   <li class="list-inline-item"><a href="https://github.com/jasonvriends/lifetracker" target="_blank" class="link-secondary" rel="noopener">Source code</a></li>
                 </ul>
               </div>
               <div class="col-12 col-lg-auto mt-3 mt-lg-0">
                 <ul class="list-inline list-inline-dots mb-0">
                   <li class="list-inline-item">
-                    Copyright © 2023
+                    Copyright © {{ currentYear }}
                     <a href="." class="link-secondary">Lifetracker</a>.
                     All rights reserved.
                   </li>
@@ -153,6 +153,8 @@ export class DefaultComponent {
     private authService: AuthService,
     private cookieConsentService: CookieConsentService
   ) {  }
+
+  currentYear: number = new Date().getFullYear();
 
   hasConsented(): boolean {
     return this.cookieConsentService.hasConsented();
