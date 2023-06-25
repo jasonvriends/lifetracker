@@ -67,19 +67,15 @@ import { ConsumableService } from '../services/consumable.service';
       <div class="container-xl">
         <div class="row justify-content-center">
           <div class="card">
-
             <div class="card-header">
               <h3 class="card-title">Activity</h3>
             </div>
-            
             <div class="list-group list-group-flush list-group-hoverable">
-              <div class="list-group-item" *ngFor="let item of consumableData">
+              <div class="list-group-item">
                 <div class="row align-items-center">
-
                   <div class="col-auto">
-                    <span class="d-block text-muted text-truncate mt-n1">{{ item.consumed_at | date: 'hh:mm a' }}</span>
+                    <span class="d-block text-muted text-truncate mt-n1">8:30 AM</span>
                   </div>
-
                   <div class="col-auto">
                       <span class="avatar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tools-kitchen-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -88,22 +84,38 @@ import { ConsumableService } from '../services/consumable.service';
                         </svg>
                       </span>
                   </div>
-
-                  <!-- Display item details here -->
                   <div class="col text-truncate">
-                    <span class="text-reset d-block">{{ item.name }}</span>
-                    <div class="d-block text-muted text-truncate mt-n1">{{ item.description }}</div>
+                    <span class="text-reset d-block">Keto Breakfast</span>
+                    <div class="d-block text-muted text-truncate mt-n1">3 eggs with 6 slices of bacon and side of tomatoes</div>
                   </div>
+          
                   <div class="col-auto">
-                    <div class="badges-list">
-                      <!-- Display item points here -->
-                      <span *ngFor="let ingredient of item.ingredients" class="badge badge-outline text-muted fw-normal badge-pill">
-                        {{ ingredient }}
+                    <div class="list-inline-item">
+                      <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-point-filled" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                          <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z" stroke-width="0" fill="currentColor"></path>
+                        </svg>
+                        Eggs
                       </span>
+                      <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-point-filled" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                          <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z" stroke-width="0" fill="currentColor"></path>
+                        </svg>
+                        Bacon
+                      </span>
+                      <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-point-filled" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                          <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z" stroke-width="0" fill="currentColor"></path>
+                        </svg>
+                        Tomatoes
+                      </span>                                            
                     </div>
                   </div>
+
                   <div class="col-auto">
-                    <!-- Item actions -->
                     <a href="#" class="list-group-item-actions">
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -115,20 +127,20 @@ import { ConsumableService } from '../services/consumable.service';
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                         <path d="M4 7l16 0"></path>
-                        <path d="M6 7v-3a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v3"></path>
-                        <path d="M15 7v-3a2 2 0 0 1 2 -2h1"></path>
-                        <path d="M6 11l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2l1 -12"></path>
-                        <path d="M3 7h18"></path>
+                        <path d="M10 11l0 6"></path>
+                        <path d="M14 11l0 6"></path>
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
                       </svg>
-                    </a>
+                    </a>                    
                   </div>
                 </div>
-              </div>     
+              </div>
+             
             </div>
-
           </div>
-        </div>
-      </div>        
+        </div>        
+      </div>
     </div>
 
   `,

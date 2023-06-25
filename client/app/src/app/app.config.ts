@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { AuthService } from './services/auth.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
+import { ConsumableService } from './services/consumable.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,5 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideOAuthClient(),
     AuthService,
     CookieConsentService,
+    ConsumableService
   ]
 };
