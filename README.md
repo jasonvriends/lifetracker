@@ -1,59 +1,77 @@
-# [Cookiecutter Django](https://cookiecutter-django.readthedocs.io/en/latest/index.html)
+# Lifetracker
 
-## Project Generation
+LifeTracker is a comprehensive personal management application designed to help users track and improve various aspects of their daily life, including habits, goals, health metrics, and personal journaling.
 
-cookiecutter gh:cookiecutter/cookiecutter-django
+[![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-project_name: Lifetracker
+License: MIT
 
-project_slug: lifetracker
+## Settings
 
-description: LifeTracker is a comprehensive personal management application designed to help users track and improve various aspects of their daily life, including habits, goals, health metrics, and personal journaling.
+Moved to [settings](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
 
-author_name: Jason Vriends
+## Basic Commands
 
-domain_name: lifetracker.thevriends.com
+### Setting Up Your Users
 
-email: lifetracker@thevriends.com
+- To create a **normal user account**, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
 
-version: 0.1.0
+- To create a **superuser account**, use this command:
 
-open_source_license: MIT
+      $ python manage.py createsuperuser
 
-username_type: email
+For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
 
-timezone: UTC
+### Type checks
 
-windows: n
+Running type checks with mypy:
 
-editor: None
+    $ mypy lifetracker
 
-use_docker: n
+### Test coverage
 
-postgresql_version: 16
+To run the tests, check your test coverage, and generate an HTML coverage report:
 
-cloud_provider: None
+    $ coverage run -m pytest
+    $ coverage html
+    $ open htmlcov/index.html
 
-mail_service: SendGrid
+#### Running tests with pytest
 
-use_async: y
+    $ pytest
 
-use_drf: n
+### Live reloading and Sass CSS compilation
 
-frontend_pipeline: None
+Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/2-local-development/developing-locally.html#using-webpack-or-gulp).
 
-use_celery: n
+### Email Server
 
-use_mailpit: y
+In development, it is often nice to be able to see emails that are being sent from your application. If you choose to use [Mailpit](https://github.com/axllent/mailpit) when generating the project a local SMTP server with a web interface will be available.
 
-use_sentry: y
+1.  [Download the latest Mailpit release](https://github.com/axllent/mailpit/releases) for your OS.
 
-use_whitenoise: y
+2.  Copy the binary file to the project root.
 
-use_heroku: n
+3.  Make it executable:
 
-ci_tool: None
+        $ chmod +x mailpit
 
-keep_local_envs_in_vcs: n
+4.  Spin up another terminal window and start it there:
 
-debug: y
+        ./mailpit
+
+5.  Check out <http://127.0.0.1:8025/> to see how it goes.
+
+Now you have your own mail server running locally, ready to receive whatever you send it.
+
+### Sentry
+
+Sentry is an error logging aggregator service. You can sign up for a free account at <https://sentry.io/signup/?code=cookiecutter> or download and host it yourself.
+The system is set up with reasonable defaults, including 404 logging and integration with the WSGI application.
+
+You must set the DSN url in production.
+
+## Deployment
+
+The following details how to deploy this application.
