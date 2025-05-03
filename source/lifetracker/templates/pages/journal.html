@@ -1,0 +1,157 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Journal - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Journal</h1>
+    <div class="flex gap-2">
+      <button class="btn btn-primary btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Entry
+      </button>
+    </div>
+  </div>
+
+  <!-- Date Picker and Filters -->
+  <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+    <div class="join bg-base-100">
+      <button class="join-item btn btn-sm" onclick="previousDay()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <input type="date" id="journalDate" class="join-item input input-bordered input-sm w-full max-w-[12rem]" />
+      <button class="join-item btn btn-sm" onclick="nextDay()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+    <div class="join">
+      <button class="join-item btn btn-sm" onclick="setToday()">Today</button>
+      <button class="join-item btn btn-sm">Yesterday</button>
+      <button class="join-item btn btn-sm">Last Week</button>
+    </div>
+  </div>
+
+  <!-- Journal Entries -->
+  <div class="grid gap-4">
+    {% for entry in entries %}
+    <div class="card bg-base-100 shadow-lg">
+      <div class="card-body">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="card-title">{{ entry.title }}</h3>
+            <div class="flex gap-2 text-sm text-base-content/70 mt-1">
+              <time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|time:"g:i A" }}</time>
+              <span class="badge badge-sm">{{ entry.category }}</span>
+            </div>
+          </div>
+          <div class="dropdown dropdown-end">
+            <button tabindex="0" class="btn btn-ghost btn-sm btn-square">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-200 rounded-box w-52 border border-base-300">
+              <li><a>Edit Entry</a></li>
+              <li><a class="text-error">Delete Entry</a></li>
+            </ul>
+          </div>
+        </div>
+        <p class="mt-4 whitespace-pre-wrap">{{ entry.content }}</p>
+        {% if entry.mood or entry.tags %}
+        <div class="flex flex-wrap gap-2 mt-4">
+          {% if entry.mood %}
+          <div class="badge badge-primary">{{ entry.mood }}</div>
+          {% endif %}
+          {% for tag in entry.tags %}
+          <div class="badge badge-outline">{{ tag }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-12">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 stroke-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        <h3 class="font-medium text-lg mt-4">No Journal Entries</h3>
+        <p class="text-base-content/70 mt-1">Start writing your thoughts for this day.</p>
+        <button class="btn btn-primary btn-sm mt-4">Create First Entry</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if entries.has_other_pages %}
+  <div class="join grid grid-cols-2 w-full max-w-xs mx-auto">
+    <button class="join-item btn btn-sm {% if not entries.has_previous %}btn-disabled{% endif %}"
+            {% if entries.has_previous %}onclick="loadPage({{ entries.previous_page_number }})"{% endif %}>
+      Previous
+    </button>
+    <button class="join-item btn btn-sm {% if not entries.has_next %}btn-disabled{% endif %}"
+            {% if entries.has_next %}onclick="loadPage({{ entries.next_page_number }})"{% endif %}>
+      Next
+    </button>
+  </div>
+  {% endif %}
+</div>
+{% endblock content %}
+
+{% block inline_javascript %}
+{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Set initial date to today
+    const dateInput = document.getElementById('journalDate');
+    dateInput.valueAsDate = new Date();
+
+    // Add change listener
+    dateInput.addEventListener('change', (e) => {
+      loadEntriesForDate(e.target.value);
+    });
+  });
+
+  function previousDay() {
+    const dateInput = document.getElementById('journalDate');
+    const currentDate = new Date(dateInput.value);
+    currentDate.setDate(currentDate.getDate() - 1);
+    dateInput.valueAsDate = currentDate;
+    loadEntriesForDate(dateInput.value);
+  }
+
+  function nextDay() {
+    const dateInput = document.getElementById('journalDate');
+    const currentDate = new Date(dateInput.value);
+    currentDate.setDate(currentDate.getDate() + 1);
+    dateInput.valueAsDate = currentDate;
+    loadEntriesForDate(dateInput.value);
+  }
+
+  function setToday() {
+    const dateInput = document.getElementById('journalDate');
+    dateInput.valueAsDate = new Date();
+    loadEntriesForDate(dateInput.value);
+  }
+
+  function loadEntriesForDate(date, page = 1) {
+    // This will be implemented to fetch entries via AJAX
+    console.log(`Loading entries for ${date}, page ${page}`);
+  }
+
+  function loadPage(page) {
+    const dateInput = document.getElementById('journalDate');
+    loadEntriesForDate(dateInput.value, page);
+  }
+</script>
+{% endblock inline_javascript %} 

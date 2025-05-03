@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Health Metrics - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Health Metrics</h1>
+    <div class="flex gap-2">
+      <button class="btn btn-primary btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Log Metrics
+      </button>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="grid gap-4">
+    <!-- Empty State -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-12">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 stroke-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3 class="font-medium text-lg mt-4">No Metrics Logged</h3>
+        <p class="text-base-content/70 mt-1">Start tracking your health by logging your first metrics.</p>
+        <button class="btn btn-primary btn-sm mt-4">Log First Metrics</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 

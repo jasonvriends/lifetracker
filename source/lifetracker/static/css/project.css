@@ -1,0 +1,14 @@
+/* These styles are generated from project.scss. */
+
+/* Custom styles */
+
+/* DaisyUI alert variants */
+.alert-debug {
+  @apply alert-info;
+}
+
+.alert-error {
+  @apply alert-error;
+}
+
+/* Add any additional custom styles below */

@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Habits - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Habits</h1>
+    <div class="flex gap-2">
+      <button class="btn btn-primary btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Habit
+      </button>
+    </div>
+  </div>
+
+  <!-- Habits Grid -->
+  <div class="grid gap-4">
+    <!-- Empty State -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-12">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 stroke-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h3 class="font-medium text-lg mt-4">No Habits Yet</h3>
+        <p class="text-base-content/70 mt-1">Start building better habits by creating your first one.</p>
+        <button class="btn btn-primary btn-sm mt-4">Create First Habit</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 

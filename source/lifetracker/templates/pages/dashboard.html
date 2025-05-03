@@ -1,0 +1,200 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Dashboard</h1>
+    <div class="flex gap-2">
+      <button class="btn btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add New
+      </button>
+      <div class="dropdown dropdown-end">
+        <button tabindex="0" class="btn btn-sm btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </button>
+        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-200 rounded-box w-52 border border-base-300">
+          <li><a class="hover:bg-base-300">Export Data</a></li>
+          <li><a class="hover:bg-base-300">Print Report</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">Active Habits</div>
+        <div class="stat-value">12</div>
+        <div class="stat-desc text-success">↗︎ 8% more than last month</div>
+      </div>
+    </div>
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">Goals Progress</div>
+        <div class="stat-value text-primary">67%</div>
+        <div class="stat-desc">15 of 22 completed</div>
+      </div>
+    </div>
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">Health Score</div>
+        <div class="stat-value text-success">85</div>
+        <div class="stat-desc text-success">↗︎ 2 points improvement</div>
+      </div>
+    </div>
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">Journal Entries</div>
+        <div class="stat-value">28</div>
+        <div class="stat-desc">Last 30 days</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Chart Section -->
+    <div class="lg:col-span-2 card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Progress Overview</h2>
+        <div class="h-[300px] flex items-center justify-center bg-base-200 rounded-box">
+          <span class="text-base-content/70">Chart placeholder - Add your visualization here</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Recent Activity</h2>
+        <div class="space-y-4">
+          <div class="flex gap-3 items-start">
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content w-8 rounded-full">
+                <span class="text-xs">JD</span>
+              </div>
+            </div>
+            <div>
+              <p class="font-medium">Completed daily meditation</p>
+              <p class="text-sm text-base-content/70">2 hours ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3 items-start">
+            <div class="avatar placeholder">
+              <div class="bg-success text-success-content w-8 rounded-full">
+                <span class="text-xs">✓</span>
+              </div>
+            </div>
+            <div>
+              <p class="font-medium">Achieved weekly exercise goal</p>
+              <p class="text-sm text-base-content/70">5 hours ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3 items-start">
+            <div class="avatar placeholder">
+              <div class="bg-warning text-warning-content w-8 rounded-full">
+                <span class="text-xs">!</span>
+              </div>
+            </div>
+            <div>
+              <p class="font-medium">Reminder: Update health metrics</p>
+              <p class="text-sm text-base-content/70">1 day ago</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Habits Overview -->
+    <div class="lg:col-span-2 card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Habits Overview</h2>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>Habit</th>
+                <th>Streak</th>
+                <th>Progress</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Morning Meditation</td>
+                <td>12 days</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <progress class="progress progress-primary w-20" value="80" max="100"></progress>
+                    <span>80%</span>
+                  </div>
+                </td>
+                <td><div class="badge badge-success">On Track</div></td>
+              </tr>
+              <tr>
+                <td>Daily Exercise</td>
+                <td>5 days</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <progress class="progress progress-primary w-20" value="60" max="100"></progress>
+                    <span>60%</span>
+                  </div>
+                </td>
+                <td><div class="badge badge-warning">Needs Focus</div></td>
+              </tr>
+              <tr>
+                <td>Reading</td>
+                <td>8 days</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <progress class="progress progress-primary w-20" value="75" max="100"></progress>
+                    <span>75%</span>
+                  </div>
+                </td>
+                <td><div class="badge badge-success">On Track</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Quick Actions</h2>
+        <div class="space-y-2">
+          <button class="btn btn-primary w-full btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add New Habit
+          </button>
+          <button class="btn btn-outline btn-sm w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Write Journal Entry
+          </button>
+          <button class="btn btn-outline btn-sm w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Update Health Metrics
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 
