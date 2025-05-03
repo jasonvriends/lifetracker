@@ -1,25 +1,31 @@
-{% extends "account/base_manage.html" %}
-{% load allauth i18n %}
-{% block head_title %}
-    {% trans "Sign Out" %}
-{% endblock head_title %}
+{% extends "layouts/base_auth.html" %}
+{% load i18n %}
+{% load allauth %}
+
+{% block head_title %}{% trans "Sign Out" %} - {{ block.super }}{% endblock %}
+
 {% block content %}
-    {% element h1 %}
-        {% trans "Sign Out" %}
-    {% endelement %}
-    {% element p %}
-        {% trans 'Are you sure you want to sign out?' %}
-    {% endelement %}
-    {% url 'account_logout' as action_url %}
-    {% element form method="post" action=action_url no_visible_fields=True %}
-        {% slot body %}
+    <div class="space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold">{% trans "Sign Out" %}</h1>
+            <p class="text-base-content/70 mt-2">
+                {% trans 'Are you sure you want to sign out?' %}
+            </p>
+        </div>
+
+        {% url 'account_logout' as action_url %}
+        <form method="post" action="{{ action_url }}" class="space-y-4">
             {% csrf_token %}
             {{ redirect_field }}
-        {% endslot %}
-        {% slot actions %}
-            {% element button type="submit" %}
-                {% trans 'Sign Out' %}
-            {% endelement %}
-        {% endslot %}
-    {% endelement %}
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:gap-4">
+                <button type="submit" class="btn btn-primary flex-1">
+                    {% trans 'Sign Out' %}
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline flex-1">
+                    {% trans 'Cancel' %}
+                </a>
+            </div>
+        </form>
+    </div>
 {% endblock content %}

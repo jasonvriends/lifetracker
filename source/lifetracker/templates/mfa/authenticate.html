@@ -1,0 +1,131 @@
+{% extends "layouts/base_auth.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load static %}
+
+{% block head_title %}{% trans "Two-Factor Authentication" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+    <div class="space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold">{% trans "Two-Factor Authentication" %}</h1>
+            <p class="text-base-content/70 mt-2">
+                {% blocktranslate %}Your account is protected by two-factor authentication. Please enter an authenticator code or use a recovery code:{% endblocktranslate %}
+            </p>
+        </div>
+
+        {% url 'mfa_authenticate' as action_url %}
+        
+        <!-- TOTP Authentication -->
+        <form method="post" action="{{ action_url }}" class="space-y-4" id="totp-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {% for error in form.non_field_errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- TOTP Code Input -->
+            <div class="form-control w-full">
+                <label class="label" for="totp-code">
+                    <span class="label-text">{% trans "Verification Code" %}</span>
+                </label>
+                <div class="relative">
+                    <input type="text" 
+                           name="code" 
+                           id="totp-code"
+                           class="input input-bordered w-full{% if form.code.errors %} input-error{% endif %}"
+                           placeholder="000000"
+                           inputmode="numeric"
+                           pattern="[0-9]*"
+                           maxlength="6"
+                           required>
+                </div>
+                {% if form.code.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                    </label>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">
+                {% trans "Verify with Authenticator" %}
+            </button>
+        </form>
+
+        <div class="divider">{% trans "or" %}</div>
+
+        <!-- Recovery Code Authentication -->
+        <form method="post" action="{{ action_url }}" class="space-y-4" id="recovery-form">
+            {% csrf_token %}
+            <input type="hidden" name="method" value="recovery_codes">
+
+            <!-- Recovery Code Input -->
+            <div class="form-control w-full">
+                <label class="label" for="recovery-code">
+                    <span class="label-text">{% trans "Recovery Code" %}</span>
+                </label>
+                <div class="relative">
+                    <input type="text" 
+                           name="code" 
+                           id="recovery-code"
+                           class="input input-bordered w-full font-mono{% if form.code.errors %} input-error{% endif %}"
+                           placeholder="xxxx-xxxx-xxxx-xxxx"
+                           required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">
+                {% trans "Verify with Recovery Code" %}
+            </button>
+        </form>
+
+        {% if "webauthn" in MFA_SUPPORTED_TYPES %}
+            <div class="divider">{% trans "or" %}</div>
+
+            <!-- WebAuthn Security Key Option -->
+            <form method="post" action="{{ action_url }}" id="webauthn_form" class="space-y-4">
+                {% csrf_token %}
+                {{ webauthn_form }}
+                <button type="button" id="mfa_webauthn_authenticate" class="btn btn-outline w-full gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    {% trans "Use a security key" %}
+                </button>
+            </form>
+
+            {{ js_data|json_script:"js_data" }}
+            {% include "mfa/webauthn/snippets/scripts.html" %}
+            <script data-allauth-onload="allauth.webauthn.forms.authenticateForm" type="application/json">{
+                "ids": {
+                    "authenticate": "mfa_webauthn_authenticate",
+                    "credential": "{{ webauthn_form.credential.auto_id }}",
+                    "data": "js_data"
+                }
+            }</script>
+        {% endif %}
+
+        <div class="text-center mt-2">
+            <form id="logout-from-stage" method="post" action="{% url 'account_logout' %}" class="inline">
+                <input type="hidden" name="next" value="{% url 'account_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm">{% trans "Cancel" %}</button>
+            </form>
+        </div>
+    </div>
+
+    {% if "webauthn" in MFA_SUPPORTED_TYPES %}
+        <script type="text/javascript">
+            allauth.webauthn.forms.authenticateForm({
+                ids: {
+                    authenticate: "mfa_webauthn_authenticate",
+                    credential: "{{ webauthn_form.credential.auto_id }}"
+                },
+                data: JSON.parse(document.getElementById('js_data').textContent)
+            })
+        </script>
+    {% endif %}
+{% endblock content %} 

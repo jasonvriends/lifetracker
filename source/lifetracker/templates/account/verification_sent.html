@@ -1,14 +1,25 @@
-{% extends "account/base_entrance.html" %}
+{% extends "layouts/base_auth.html" %}
 {% load i18n %}
 {% load allauth %}
-{% block head_title %}
-    {% trans "Verify Your Email Address" %}
-{% endblock head_title %}
+
+{% block head_title %}{% trans "Verify Your Email Address" %} - {{ block.super }}{% endblock %}
+
 {% block content %}
-    {% element h1 %}
-        {% trans "Verify Your Email Address" %}
-    {% endelement %}
-    {% element p %}
-        {% blocktrans %}We have sent an email to you for verification. Follow the link provided to finalize the signup process. If you do not see the verification email in your main inbox, check your spam folder. Please contact us if you do not receive the verification email within a few minutes.{% endblocktrans %}
-    {% endelement %}
-{% endblock content %}
+    <div class="space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold">{% trans "Verify Your Email Address" %}</h1>
+        </div>
+
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+                <h3 class="font-bold">{% trans "Check Your Email" %}</h3>
+                <div class="text-sm">
+                    {% blocktrans %}
+                        We have sent an email to you for verification. Follow the link provided to finalize the signup process. If you do not see the verification email in your main inbox, check your spam folder. Please contact us if you do not receive the verification email within a few minutes.
+                    {% endblocktrans %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
