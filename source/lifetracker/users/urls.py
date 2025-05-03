@@ -3,12 +3,12 @@ from django.urls import path
 from .views import (
     UserDetailView, UserSettingsProfileView, UserSettingsAccountView,
     UserSettingsAppearanceView, UserSettingsNotificationsView, UserSettingsDisplayView,
-    UserDeleteView
+    UserDeleteView, UserRedirectView
 )
 
 app_name = "users"
 urlpatterns = [
-    path("~redirect/", view=UserDetailView.as_view(), name="redirect"),
+    path("~redirect/", view=UserRedirectView.as_view(), name="redirect"),
     path("<int:pk>/", view=UserDetailView.as_view(), name="detail"),
     path("settings/", view=UserSettingsProfileView.as_view(), name="settings_profile"),
     path("settings/account/", view=UserSettingsAccountView.as_view(), name="settings_account"),

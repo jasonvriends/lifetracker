@@ -1,0 +1,122 @@
+{% extends "layouts/app.html" %}
+{% load static allauth i18n %}
+
+{% block title %}{% trans "Email Addresses" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{% trans "Email Addresses" %}</h1>
+    <p class="text-base-content/70">{% trans "Manage your email addresses and verification status." %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            {% if emailaddresses %}
+                <div class="space-y-6">
+                    {% url 'account_email' as email_url %}
+                    <form action="{{ email_url }}" method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="space-y-2">
+                            {% for radio in emailaddress_radios %}
+                                {% with emailaddress=radio.emailaddress %}
+                                    <div class="form-control">
+                                        <label class="label cursor-pointer justify-start gap-4">
+                                            <input type="radio" name="email" value="{{ emailaddress.email }}" class="radio" {% if radio.checked %}checked{% endif %}>
+                                            <div class="flex items-center gap-2">
+                                                <span class="label-text">{{ emailaddress.email }}</span>
+                                                {% if emailaddress.verified %}
+                                                    <span class="badge badge-success gap-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        {% translate "Verified" %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-warning gap-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        {% translate "Unverified" %}
+                                                    </span>
+                                                {% endif %}
+                                                {% if emailaddress.primary %}
+                                                    <span class="badge badge-primary">{% translate "Primary" %}</span>
+                                                {% endif %}
+                                            </div>
+                                        </label>
+                                    </div>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <button type="submit" name="action_primary" class="btn btn-primary">
+                                {% trans 'Make Primary' %}
+                            </button>
+                            <button type="submit" name="action_send" class="btn btn-secondary">
+                                {% trans 'Re-send Verification' %}
+                            </button>
+                            <button type="submit" name="action_remove" class="btn btn-error">
+                                {% trans 'Remove' %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                {% include "account/snippets/warn_no_email.html" %}
+            {% endif %}
+
+            {% if can_add_email %}
+                <div class="divider"></div>
+
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-xl font-semibold">{% trans "Add Email Address" %}</h2>
+                    </div>
+
+                    {% url 'account_email' as action_url %}
+                    <form method="post" action="{{ action_url }}" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text">Email</span>
+                            </label>
+                            <input type="email" name="email" class="input input-bordered w-full" placeholder="Enter your email address" required>
+                        </div>
+
+                        <button type="submit" name="action_add" class="btn btn-primary">
+                            {% trans "Add Email" %}
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+    <script src="{% static 'account/js/account.js' %}"></script>
+    <script src="{% static 'account/js/onload.js' %}"></script>
+    <script data-allauth-onload="allauth.account.forms.manageEmailForm" type="application/json">{
+    "i18n": {"confirmDelete": "{% trans 'Do you really want to remove the selected email address?' %}"}
+}
+    </script>
+{% endblock %}

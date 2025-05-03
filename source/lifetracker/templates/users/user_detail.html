@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ object.username }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">{{ object.username }}</h2>
+      {% if object.name %}
+        <p>{{ object.name }}</p>
+      {% endif %}
+      {% if object.bio %}
+        <p class="text-base-content/70">{{ object.bio }}</p>
+      {% endif %}
+      <div class="card-actions justify-end">
+        {% if object == request.user %}
+          <a href="{% url 'users:settings_profile' %}" class="btn btn-primary">Edit Profile</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 

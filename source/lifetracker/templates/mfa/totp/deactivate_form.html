@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Two-Factor Authentication" %} - {% trans "Disable Authenticator App" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{% trans "Two-Factor Authentication" %}</h1>
+    <p class="text-base-content/70">{% trans "Manage your two-factor authentication settings." %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            <!-- Submenu Title -->
+            <div class="space-y-2">
+              <h2 class="text-xl font-semibold text-error">{% trans "Disable Authenticator App" %}</h2>
+              <p class="text-base-content/70">{% trans "Are you sure you want to disable two-factor authentication? This will make your account less secure." %}</p>
+            </div>
+
+            <div class="card bg-base-200 mt-6">
+              <div class="card-body">
+                <div class="space-y-6">
+                  <!-- Form -->
+                  <form method="post" class="space-y-6">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                      <div class="alert alert-error">
+                        {% for error in form.non_field_errors %}
+                          <span>{{ error }}</span>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    <!-- Verification Code -->
+                    <div class="form-control w-full">
+                      <label class="label">
+                        <span class="label-text">{% trans "Verification Code" %}</span>
+                      </label>
+                      <input type="text" name="code" class="input input-bordered w-full {% if form.code.errors %}input-error{% endif %}" required>
+                      {% if form.code.errors %}
+                        <label class="label">
+                          <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                        </label>
+                      {% endif %}
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                      <a href="{% url 'mfa_index' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+                      <button type="submit" class="btn btn-error">{% trans "Disable" %}</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

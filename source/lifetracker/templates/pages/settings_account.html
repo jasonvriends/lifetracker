@@ -1,0 +1,66 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Account - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Account Settings</h1>
+    <p class="text-base-content/70">Manage your account preferences and danger zone settings.</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            <!-- Account Settings Form -->
+            <form class="" method="post">
+              {% csrf_token %}
+              <!-- Delete Account Section -->
+              <div class="">
+                <div class="flex-none">
+                  <h3 class="text-lg font-medium text-error">Danger Zone</h3>
+                  <p class="text-base-content/70 text-sm">Once you delete your account, there is no going back. Please be certain.</p>
+                </div>
+                <div class="mt-4">
+                  <!-- Delete Account Button -->
+                  <button class="btn btn-error" onclick="delete_account_modal.showModal()">Delete Account</button>
+
+                  <!-- Delete Account Modal -->
+                  <dialog id="delete_account_modal" class="modal modal-bottom sm:modal-middle">
+                    <div class="modal-box">
+                      <h3 class="font-bold text-lg text-error">Delete Account</h3>
+                      <p class="py-4">Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.</p>
+                      <div class="modal-action">
+                        <form method="dialog">
+                          <button class="btn btn-ghost">Cancel</button>
+                        </form>
+                        <form method="post" action="{% url 'users:delete_account' %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-error">Delete Account</button>
+                        </form>
+                      </div>
+                    </div>
+                  </dialog>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 

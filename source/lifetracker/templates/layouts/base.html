@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+{% load static i18n %}
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LifeTracker{% endblock %}</title>
+  
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/favicons/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicons/favicon-16x16.png' %}">
+  <link rel="manifest" href="{% static 'images/favicons/site.webmanifest' %}">
+  
+  <!-- CSS -->
+  {% block css %}
+  <!-- Tailwind CSS and DaisyUI via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.3/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      daisyui: {
+        themes: ["light", "night"],
+      },
+    }
+  </script>
+  {% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block body %}{% endblock %}
+
+  <!-- JavaScript -->
+  {% block javascript %}
+  <!-- Theme Switcher -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeControllers = document.querySelectorAll('.theme-controller');
+      
+      // Set initial theme from localStorage or system preference
+      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light');
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Update all theme controllers to match the current theme
+      themeControllers.forEach(controller => {
+        controller.checked = savedTheme === 'night';
+      });
+      
+      // Theme toggle handler for all controllers
+      themeControllers.forEach(controller => {
+        controller.addEventListener('change', (e) => {
+          const newTheme = e.target.checked ? 'night' : 'light';
+          document.documentElement.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+          
+          // Keep all controllers in sync
+          themeControllers.forEach(otherController => {
+            if (otherController !== e.target) {
+              otherController.checked = e.target.checked;
+            }
+          });
+        });
+      });
+    });
+  </script>
+  {% endblock %}
+
+  {% block extra_body %}{% endblock %}
+</body>
+</html> 

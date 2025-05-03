@@ -1,0 +1,94 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Two-Factor Authentication" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{% trans "Two-Factor Authentication" %}</h1>
+    <p class="text-base-content/70">{% trans "Manage your two-factor authentication settings." %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            <!-- 2FA Content -->
+            <div class="space-y-6">
+              <!-- Authenticator App -->
+              <div class="card bg-base-200">
+                <div class="card-body">
+                  <h3 class="card-title">{% trans "Authenticator App" %}</h3>
+                  {% if not authenticators.totp %}
+                    <p>{% trans "An authenticator app is not active." %}</p>
+                    <div class="card-actions justify-end">
+                      <a href="{% url 'mfa_activate_totp' %}" class="btn btn-primary">{% trans "Activate" %}</a>
+                    </div>
+                  {% else %}
+                    <p>{% trans "Authentication using an authenticator app is active." %}</p>
+                    <div class="card-actions justify-end">
+                      <form method="post" action="{% url 'mfa_deactivate_totp' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-error">{% trans "Deactivate" %}</button>
+                      </form>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Recovery Codes -->
+              {% if authenticators.totp %}
+                <div class="card bg-base-200">
+                  <div class="card-body">
+                    <h3 class="card-title">{% trans "Recovery Codes" %}</h3>
+                    {% if recovery_codes %}
+                      <p>
+                        {% blocktranslate count unused_count=unused_codes|length %}
+                          There is {{ unused_count }} out of {{ total_count }} recovery code available.
+                        {% plural %}
+                          There are {{ unused_count }} out of {{ total_count }} recovery codes available.
+                        {% endblocktranslate %}
+                      </p>
+                      <div class="card-actions justify-end">
+                        {% if unused_codes|length > 0 %}
+                        <a href="{% url 'mfa_view_recovery_codes' %}" class="btn btn-outline">{% trans "View" %}</a>
+                        <a href="{% url 'mfa_download_recovery_codes' %}" class="btn btn-outline">{% trans "Download" %}</a>
+                        {% endif %}
+                        <form method="post" action="{% url 'mfa_generate_recovery_codes' %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-outline">{% trans "Generate" %}</button>
+                        </form>
+                      </div>
+                    {% else %}
+                      <p>{% trans "No recovery codes set up." %}</p>
+                      <div class="card-actions justify-end">
+                        <form method="post" action="{% url 'mfa_generate_recovery_codes' %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans "Generate" %}</button>
+                        </form>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 

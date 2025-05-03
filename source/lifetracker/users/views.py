@@ -70,7 +70,7 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
 
 
 class UserSettingsAccountView(LoginRequiredMixin, TemplateView):
-    template_name = "pages/settings/account.html"
+    template_name = "pages/settings_account.html"
 
 
 class UserSettingsAppearanceView(LoginRequiredMixin, TemplateView):

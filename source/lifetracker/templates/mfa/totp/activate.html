@@ -1,0 +1,93 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Set up Two-Factor Authentication" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{% trans "Two-Factor Authentication" %}</h1>
+    <p class="text-base-content/70">{% trans "Set up two-factor authentication using an authenticator app." %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            <div class="card bg-base-200">
+              <div class="card-body">
+                <div class="flex flex-col items-center space-y-6">
+                  <!-- QR Code -->
+                  <div class="w-48 h-48">
+                    <img src="{{ qr_code_url }}" alt="QR Code" class="w-full h-full">
+                  </div>
+
+                  <!-- Manual Entry -->
+                  <div class="text-center">
+                    <p class="text-sm text-base-content/70 mb-2">{% trans "Can't scan the QR code?" %}</p>
+                    <div class="join">
+                      <input type="text" value="{{ secret_key }}" class="join-item input input-bordered input-sm" readonly>
+                      <button class="join-item btn btn-sm" onclick="copyToClipboard('{{ secret_key }}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Form -->
+                  <form method="post" class="w-full max-w-sm space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                      <div class="alert alert-error">
+                        {% for error in form.non_field_errors %}
+                          <span>{{ error }}</span>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    <div class="form-control w-full">
+                      <label class="label">
+                        <span class="label-text">{% trans "Verification Code" %}</span>
+                      </label>
+                      <input type="text" name="code" class="input input-bordered w-full {% if form.code.errors %}input-error{% endif %}" required>
+                      {% if form.code.errors %}
+                        <label class="label">
+                          <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                        </label>
+                      {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full">{% trans "Verify and Activate" %}</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    // You could add a toast notification here
+  });
+}
+</script>
+{% endblock %} 

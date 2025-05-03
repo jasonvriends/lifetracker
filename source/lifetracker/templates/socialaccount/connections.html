@@ -1,0 +1,93 @@
+{% extends "layouts/app.html" %}
+{% load static allauth i18n socialaccount %}
+
+{% block title %}Account Connections - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Account Connections</h1>
+    <p class="text-base-content/70">{% trans "Manage your third-party account connections" %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            {% if not form.accounts %}
+            <div class="card bg-base-200">
+              <div class="card-body">
+                <p class="text-base-content/70">{% trans "You currently have no third-party accounts connected to this account." %}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Connected Accounts -->
+            {% if form.accounts %}
+            <div class="space-y-4">
+              <div class="card bg-base-200">
+                <div class="card-body">
+                  <h3 class="card-title">{% trans "Connected Accounts" %}</h3>
+                  <form method="post" action="{% url 'socialaccount_connections' %}">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                      {% for base_account in form.accounts %}
+                      {% with base_account.get_provider_account as account %}
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <input type="radio" name="account" value="{{ base_account.id }}" class="radio radio-primary" />
+                          <label for="{{ base_account.id }}" class="flex items-center gap-2">
+                            <span class="font-medium">{{ account.get_brand.name }}</span>
+                            <span class="text-base-content/70">{{ account }}</span>
+                          </label>
+                        </div>
+                      </div>
+                      {% endwith %}
+                      {% endfor %}
+                    </div>
+                    <div class="card-actions justify-end mt-4">
+                      <button type="submit" class="btn btn-error">{% trans 'Remove' %}</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Available Providers -->
+            {% get_providers as socialaccount_providers %}
+            {% if socialaccount_providers %}
+            <div class="space-y-4">
+              <div class="card bg-base-200">
+                <div class="card-body">
+                  <h3 class="card-title">{% trans "Add a Third Party Account" %}</h3>
+                  <div class="space-y-4">
+                    {% if not form.accounts %}
+                    <p class="text-base-content/70">{% trans "Connect one or more third-party accounts to enable social login:" %}</p>
+                    {% endif %}
+                    {% include "socialaccount/snippets/provider_list.html" with process="connect" %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% include "socialaccount/snippets/login_extra.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

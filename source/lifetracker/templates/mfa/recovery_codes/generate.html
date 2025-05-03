@@ -1,0 +1,63 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Generate Recovery Codes - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Generate Recovery Codes</h1>
+    <p class="text-base-content/70">{% trans "You are about to generate a new set of recovery codes for your account." %}</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            {% block content_inner %}
+            <!-- Warning Message -->
+            <div class="alert alert-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div>
+                <h3 class="font-bold">{% trans "Warning" %}</h3>
+                <p class="text-sm">{% trans "Generating new recovery codes will invalidate your existing ones." %}</p>
+              </div>
+            </div>
+
+            <!-- Generate Form -->
+            <form method="post" action="{% url 'mfa_generate_recovery_codes' %}">
+              {% csrf_token %}
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-2">
+                  <h3 class="text-lg font-medium">{% trans "Confirm Generation" %}</h3>
+                  <p class="text-base-content/70">
+                    {% trans "Please confirm that you want to generate new recovery codes. Your existing codes will no longer work." %}
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <a href="{% url 'mfa_view_recovery_codes' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+                  <button type="submit" class="btn btn-primary">{% trans "Generate New Codes" %}</button>
+                </div>
+              </div>
+            </form>
+            {% endblock content_inner %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 
