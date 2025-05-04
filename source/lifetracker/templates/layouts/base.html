@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static i18n %}
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="{% if user.is_authenticated and user.theme %}{{ user.theme }}{% else %}{{ request.COOKIES.theme|default:'light' }}{% endif %}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,39 +20,79 @@
   <script>
     tailwind.config = {
       daisyui: {
-        themes: ["light", "night"],
+        themes: true, // Enable all available themes
       },
     }
   </script>
   {% endblock %}
-</head>
-<body class="{% block body_class %}{% endblock %}">
-  {% block body %}{% endblock %}
 
-  <!-- JavaScript -->
-  {% block javascript %}
-  <!-- Theme Switcher -->
+  <!-- Theme Handling -->
   <script>
+    // Theme initialization and handling
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    function setCookie(name, value, days) {
+      let expires = "";
+      if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = `; expires=${date.toUTCString()}`;
+      }
+      document.cookie = `${name}=${value}${expires}; path=/`;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-      const themeControllers = document.querySelectorAll('.theme-controller');
-      
-      // Set initial theme from localStorage or system preference
-      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light');
+      {% if user.is_authenticated and user.theme %}
+      // User has a theme set in profile preferences - use it
+      const savedTheme = "{{ user.theme }}";
       document.documentElement.setAttribute('data-theme', savedTheme);
       
-      // Update all theme controllers to match the current theme
+      // Disable theme toggles when user has theme preference
+      const themeControllers = document.querySelectorAll('.theme-controller');
       themeControllers.forEach(controller => {
-        controller.checked = savedTheme === 'night';
+        // Style the toggle to show it's disabled
+        const themeToggle = controller.closest('.swap') || controller.parentElement;
+        if (themeToggle) {
+          themeToggle.title = "Theme is set in display settings";
+          themeToggle.classList.add('opacity-50');
+        }
+        
+        // Show message when clicked
+        controller.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert('Your theme is set in Display Settings. Go to Settings > Display to change it.');
+          return false;
+        });
       });
+      {% else %}
+      // No user theme preference - use cookie or system preference
+      let savedTheme = getCookie('theme');
       
-      // Theme toggle handler for all controllers
+      // If no cookie, use system preference
+      if (!savedTheme) {
+        savedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Set up theme toggles
+      const themeControllers = document.querySelectorAll('.theme-controller');
       themeControllers.forEach(controller => {
+        // Set initial state based on current theme
+        controller.checked = savedTheme === 'dark';
+        
+        // Handle theme toggle
         controller.addEventListener('change', (e) => {
-          const newTheme = e.target.checked ? 'night' : 'light';
+          const newTheme = e.target.checked ? 'dark' : 'light';
           document.documentElement.setAttribute('data-theme', newTheme);
-          localStorage.setItem('theme', newTheme);
+          setCookie('theme', newTheme, 365); // Store for 1 year
           
-          // Keep all controllers in sync
+          // Sync all toggles
           themeControllers.forEach(otherController => {
             if (otherController !== e.target) {
               otherController.checked = e.target.checked;
@@ -60,9 +100,29 @@
           });
         });
       });
+      
+      // Listen for system preference changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!getCookie('theme')) {
+          // Only apply if user hasn't set a preference
+          const newTheme = e.matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', newTheme);
+          
+          // Update toggle state
+          themeControllers.forEach(controller => {
+            controller.checked = e.matches;
+          });
+        }
+      });
+      {% endif %}
     });
   </script>
-  {% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block body %}{% endblock %}
+
+  <!-- JavaScript -->
+  {% block javascript %}{% endblock %}
 
   {% block extra_body %}{% endblock %}
 </body>

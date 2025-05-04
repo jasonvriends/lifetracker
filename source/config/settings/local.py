@@ -38,6 +38,17 @@ EMAIL_PORT = 1025
 # http://whitenoise.evans.io/en/latest/django.html#using-whitenoise-in-development
 INSTALLED_APPS = ["whitenoise.runserver_nostatic", *INSTALLED_APPS]
 
+# WhiteNoise Configuration
+WHITENOISE_AUTOREFRESH = True
+WHITENOISE_USE_FINDERS = True
+
+# Disable WhiteNoise for media files
+# WHITENOISE_AUTOREFRESH = True
+# WHITENOISE_USE_FINDERS = True
+# WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp']
+
+# Remove WhiteNoise from middleware
+MIDDLEWARE = [m for m in MIDDLEWARE if not m.startswith('whitenoise')]
 
 # django-debug-toolbar
 # ------------------------------------------------------------------------------
@@ -52,6 +63,8 @@ DEBUG_TOOLBAR_CONFIG = {
         # Disable profiling panel due to an issue with Python 3.12:
         # https://github.com/jazzband/django-debug-toolbar/issues/1875
         "debug_toolbar.panels.profiling.ProfilingPanel",
+        # Disable URLs panel due to issue with User model name property
+        "debug_toolbar.panels.urls.URLsPanel",
     ],
     "SHOW_TEMPLATE_CONTEXT": True,
 }
@@ -89,6 +102,11 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'lifetracker.users': {  # Add our app's logger
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,

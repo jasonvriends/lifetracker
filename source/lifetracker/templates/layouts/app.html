@@ -1,252 +1,233 @@
-{% load static i18n %}<!DOCTYPE html>
-{% get_current_language as LANGUAGE_CODE %}
-<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <title>
-      {% block title %}
-      Lifetracker
-      {% endblock title %}
-    </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description"
-          content="Lifetracker is a web application for personal productivity and health tracking with the following features: Habits, Goals, Health Monitoring, and Daily Journal." />
-    <meta name="author"
-          content="Jason Vriends" />
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+{% extends "layouts/base.html" %}
+{% load static i18n %}
 
-    {% block css %}
-    <!-- Tailwind CSS and DaisyUI via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.3/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        daisyui: {
-          themes: ["light", "night"],
-        },
-      }
-    </script>
-    {% endblock css %}
+{% block title %}
+  {% block head_title %}{% endblock head_title %}
+  {% if block.super %}
+    - {{ block.super }}
+  {% endif %}
+{% endblock %}
 
-    {% block javascript %}
-    <!-- Your custom JavaScript -->
-    <script defer src="{% static 'js/project.js' %}"></script>
-    {% endblock javascript %}
-  </head>
-
-  <body class="bg-base-100">
-    <div class="drawer lg:drawer-open">
-      <input id="sidebar-drawer" type="checkbox" class="drawer-toggle" />
-      
-      <!-- Drawer content -->
-      <div class="drawer-content flex flex-col min-h-screen">
-        <!-- Top bar for mobile -->
-        <div class="navbar bg-base-100 border-b lg:hidden">
-          <div class="flex-none">
-            <label for="sidebar-drawer" class="btn btn-square btn-ghost drawer-button">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-              </svg>
-            </label>
-          </div>
-          <div class="flex-1">
-            <span class="text-xl font-semibold">Lifetracker</span>
-          </div>
-        </div>
-
-        <!-- Desktop breadcrumbs -->
-        <div class="hidden lg:flex items-center px-4 py-2 border-b border-base-300 bg-base-100/50 backdrop-blur supports-[backdrop-filter]:bg-base-100/50">
-          <div class="text-sm breadcrumbs">
-            <ul>
-              <li>
-                <a href="{% url 'dashboard' %}" class="text-base-content/70 hover:text-base-content">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                </a>
-              </li>
-              {% if request.path != '/' %}
-                {% if request.path == '/journal/' %}
-                  <li><a href="{% url 'journal' %}">Journal</a></li>
-                {% elif request.path == '/habits/' %}
-                  <li><a href="{% url 'habits' %}">Habits</a></li>
-                {% elif request.path == '/goals/' %}
-                  <li><a href="{% url 'goals' %}">Goals</a></li>
-                {% elif request.path == '/metrics/' %}
-                  <li><a href="{% url 'metrics' %}">Health Metrics</a></li>
-                {% elif '/users/' in request.path and request.user.is_authenticated %}
-                  <li><a href="{% url 'users:detail' request.user.pk %}">Profile</a></li>
-                {% endif %}
-              {% endif %}
-            </ul>
-          </div>
-        </div>
-
-        <!-- Main content -->
-        <main class="flex-1 p-4">
-          {% if messages %}
-            {% for message in messages %}
-              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mb-4">
-                <span>{{ message }}</span>
-                <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
-              </div>
-            {% endfor %}
-          {% endif %}
-
-          {% block content %}
-            <p>Use this document as a way to quick start any new project.</p>
-          {% endblock content %}
-        </main>
+{% block body %}
+<div class="drawer lg:drawer-open">
+  <input id="sidebar-drawer" type="checkbox" class="drawer-toggle" />
+  
+  <!-- Drawer content -->
+  <div class="drawer-content flex flex-col min-h-screen">
+    <!-- Top bar for mobile -->
+    <div class="navbar bg-base-100 border-b lg:hidden">
+      <div class="flex-none">
+        <label for="sidebar-drawer" class="btn btn-square btn-ghost drawer-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </label>
       </div>
-
-      <!-- Sidebar -->
-      <div class="drawer-side z-40">
-        <label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-        <aside class="w-80 min-h-screen bg-base-200 flex flex-col">
-          <!-- Logo -->
-          <div class="p-4 flex items-center gap-2 border-b border-base-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span class="text-xl font-bold">Lifetracker</span>
-          </div>
-
-          <!-- Navigation Menu -->
-          <ul class="menu menu-sm p-4 flex-1 [&_li>*]:py-3">
-            <li>
-              <a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %} hover:bg-base-300 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'habits' %}" class="{% if request.path == '/habits/' %}active{% endif %} hover:bg-base-300 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Habits
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'goals' %}" class="{% if request.path == '/goals/' %}active{% endif %} hover:bg-base-300 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Goals
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'journal' %}" class="{% if request.path == '/journal/' %}active{% endif %} hover:bg-base-300 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Journal
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'metrics' %}" class="{% if request.path == '/metrics/' %}active{% endif %} hover:bg-base-300 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Health Metrics
-              </a>
-            </li>
-          </ul>
-
-          <!-- Bottom section with search, theme toggle and user menu -->
-          <div class="border-t border-base-300">
-            <!-- Search and Theme -->
-            <div class="p-4 flex gap-2 items-center border-b border-base-300">
-              <div class="flex-1">
-                <div class="join w-full">
-                  <input type="text" placeholder="Search..." class="join-item input input-sm input-bordered flex-1 w-full focus:outline-none bg-base-100" />
-                  <button class="join-item btn btn-sm btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <label class="swap swap-rotate btn btn-sm btn-circle btn-ghost hover:bg-base-300">
-                <input type="checkbox" class="theme-controller" value="night" />
-                <!-- moon icon -->
-                <svg class="swap-on h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
-                <!-- sun icon -->
-                <svg class="swap-off h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
-              </label>
-            </div>
-
-            <!-- User Menu -->
-            <div class="p-4">
-              {% if request.user.is_authenticated %}
-                <div class="dropdown dropdown-top w-full">
-                  <div tabindex="0" role="button" class="flex items-center gap-3 w-full p-3 hover:bg-base-300 rounded-lg cursor-pointer transition-colors border border-base-300">
-                    <div class="avatar placeholder">
-                      <div class="bg-primary text-primary-content rounded-full w-10">
-                        <span>{{ request.user.get_initials }}</span>
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <p class="font-medium">{{ request.user.get_full_name }}</p>
-                    </div>
-                  </div>
-                  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-200 rounded-box w-52 border border-base-300">
-                    <li>
-                      <a href="{% url 'users:settings_profile' %}" class="hover:bg-base-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {% translate "My Profile" %}
-                      </a>
-                    </li>
-                    <li>
-                      <a href="{% url 'account_logout' %}" class="hover:bg-base-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        {% translate "Sign Out" %}
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              {% else %}
-                <div class="flex flex-col gap-2">
-                  {% if ACCOUNT_ALLOW_REGISTRATION %}
-                    <a href="{% url 'account_signup' %}" class="btn btn-primary btn-sm">{% translate "Sign Up" %}</a>
-                  {% endif %}
-                  <a href="{% url 'account_login' %}" class="btn btn-ghost btn-sm hover:bg-base-300">{% translate "Sign In" %}</a>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        </aside>
+      <div class="flex-1">
+        <span class="text-xl font-semibold">Lifetracker</span>
       </div>
     </div>
 
-    {% block modal %}{% endblock modal %}
+    <!-- Desktop breadcrumbs -->
+    <div class="hidden lg:flex items-center px-4 py-2 border-b border-base-300 bg-base-100/50 backdrop-blur supports-[backdrop-filter]:bg-base-100/50">
+      <div class="text-sm breadcrumbs">
+        <ul>
+          <li>
+            <a href="{% url 'dashboard' %}" class="text-base-content/70 hover:text-base-content">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </a>
+          </li>
+          {% if request.path != '/dashboard/' %}
+            {% if request.path == '/journal/' %}
+              <li><a href="{% url 'journal' %}">Journal</a></li>
+            {% elif request.path == '/habits/' %}
+              <li><a href="{% url 'habits' %}">Habits</a></li>
+            {% elif request.path == '/goals/' %}
+              <li><a href="{% url 'goals' %}">Goals</a></li>
+            {% elif request.path == '/metrics/' %}
+              <li><a href="{% url 'metrics' %}">Health Metrics</a></li>
+            {% elif '/users/' in request.path and request.user.is_authenticated %}
+              <li><a href="{% url 'users:detail' request.user.pk %}">Profile</a></li>
+            {% elif '/accounts/' in request.path %}
+              <li>Account</li>
+              {% if request.resolver_match.url_name == 'account_login' %}
+                <li>Sign In</li>
+              {% elif request.resolver_match.url_name == 'account_signup' %}
+                <li>Sign Up</li>
+              {% elif request.resolver_match.url_name == 'account_reset_password' %}
+                <li>Reset Password</li>
+              {% elif request.resolver_match.url_name == 'account_email' %}
+                <li>Email Settings</li>
+              {% elif request.resolver_match.url_name == 'account_change_password' %}
+                <li>Change Password</li>
+              {% elif request.resolver_match.url_name == 'socialaccount_connections' %}
+                <li>Social Connections</li>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        </ul>
+      </div>
+    </div>
 
-    {% block inline_javascript %}
-    <script>
-      // Theme handling
-      document.addEventListener('DOMContentLoaded', () => {
-        const themeController = document.querySelector('.theme-controller');
-        
-        // Set initial theme from localStorage or system preference
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light');
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        themeController.checked = savedTheme === 'night';
-        
-        // Theme toggle handler
-        themeController.addEventListener('change', (e) => {
-          const newTheme = e.target.checked ? 'night' : 'light';
-          document.documentElement.setAttribute('data-theme', newTheme);
-          localStorage.setItem('theme', newTheme);
-        });
-      });
-    </script>
-    {% endblock inline_javascript %}
-  </body>
-</html>
+    <!-- Main content -->
+    <main class="flex-1 p-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mb-4">
+            <span>{{ message }}</span>
+            <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% block content %}
+        <p>Use this document as a way to quick start any new project.</p>
+      {% endblock content %}
+    </main>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="drawer-side z-40">
+    <label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <aside class="w-80 min-h-screen bg-base-200 flex flex-col">
+      <!-- Logo -->
+      <div class="p-4 flex items-center gap-2 border-b border-base-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <span class="text-xl font-bold">Lifetracker</span>
+      </div>
+
+      <!-- Navigation Menu -->
+      <ul class="menu menu-sm p-4 flex-1 [&_li>*]:py-3">
+        <li>
+          <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %} hover:bg-base-300 gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'habits' %}" class="{% if request.path == '/habits/' %}active{% endif %} hover:bg-base-300 gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Habits
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'goals' %}" class="{% if request.path == '/goals/' %}active{% endif %} hover:bg-base-300 gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Goals
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'journal' %}" class="{% if request.path == '/journal/' %}active{% endif %} hover:bg-base-300 gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Journal
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'metrics' %}" class="{% if request.path == '/metrics/' %}active{% endif %} hover:bg-base-300 gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Health Metrics
+          </a>
+        </li>
+      </ul>
+
+      <!-- Bottom section with search, theme toggle and user menu -->
+      <div class="border-t border-base-300">
+        <!-- Search and Theme -->
+        <div class="p-4 flex gap-2 items-center border-b border-base-300">
+          <div class="flex-1">
+            <div class="join w-full">
+              <input type="text" placeholder="Search..." class="join-item input input-sm input-bordered flex-1 w-full focus:outline-none bg-base-100" />
+              <button class="join-item btn btn-sm btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {% if user.is_authenticated and user.theme %}
+          <a href="{% url 'users:settings_display' %}" class="btn btn-sm btn-circle btn-ghost hover:bg-base-300" title="Theme settings">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+          </a>
+          {% else %}
+          <label class="swap swap-rotate btn btn-sm btn-circle btn-ghost hover:bg-base-300">
+            <input type="checkbox" class="theme-controller" value="dark">
+            <!-- moon icon -->
+            <svg class="swap-on h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
+            <!-- sun icon -->
+            <svg class="swap-off h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
+          </label>
+          {% endif %}
+        </div>
+
+        <!-- User Menu -->
+        <div class="p-4">
+          {% if request.user.is_authenticated %}
+            <div class="dropdown dropdown-top w-full">
+              <div tabindex="0" role="button" class="flex items-center gap-3 w-full p-3 hover:bg-base-300 rounded-lg cursor-pointer transition-colors border border-base-300">
+                <!-- User avatar or placeholder -->
+                <div class="avatar placeholder">
+                  {% if request.user.is_authenticated and request.user.avatar %}
+                    <div class="rounded-full w-10">
+                      <img src="{{ request.user.avatar.url }}" alt="{{ request.user.get_initials }}" />
+                    </div>
+                  {% else %}
+                    <div class="bg-primary text-primary-content rounded-full w-10">
+                      <span>{{ request.user.get_initials }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium">{{ request.user.get_full_name }}</p>
+                </div>
+              </div>
+              <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-200 rounded-box w-52 border border-base-300">
+                <li>
+                  <a href="{% url 'users:settings_profile' %}" class="hover:bg-base-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {% translate "My Profile" %}
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'account_logout' %}" class="hover:bg-base-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    {% translate "Sign Out" %}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          {% else %}
+            <div class="flex flex-col gap-2">
+              {% if ACCOUNT_ALLOW_REGISTRATION %}
+                <a href="{% url 'account_signup' %}" class="btn btn-primary btn-sm">{% translate "Sign Up" %}</a>
+              {% endif %}
+              <a href="{% url 'account_login' %}" class="btn btn-ghost btn-sm hover:bg-base-300">{% translate "Sign In" %}</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+{% block modal %}{% endblock modal %}
+{% endblock %}

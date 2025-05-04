@@ -7,14 +7,30 @@
 <div class="container mx-auto px-4 py-8">
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-      <h2 class="card-title">{{ object.username }}</h2>
-      {% if object.name %}
-        <p>{{ object.name }}</p>
-      {% endif %}
-      {% if object.bio %}
-        <p class="text-base-content/70">{{ object.bio }}</p>
-      {% endif %}
-      <div class="card-actions justify-end">
+      <div class="flex items-center gap-4">
+        <!-- User avatar or placeholder -->
+        <div class="avatar placeholder">
+          {% if object.avatar %}
+            <div class="rounded-full w-16 h-16">
+              <img src="{{ object.avatar.url }}" alt="{{ object.get_initials }}" />
+            </div>
+          {% else %}
+            <div class="bg-primary text-primary-content rounded-full w-16 h-16 flex items-center justify-center">
+              <span class="text-xl font-bold">{{ object.get_initials }}</span>
+            </div>
+          {% endif %}
+        </div>
+        
+        <div>
+          <h2 class="card-title">{{ object.name }}</h2>
+          <p class="text-base-content/70">{{ object.email }}</p>
+          {% if object.bio %}
+            <p class="text-base-content/70 mt-2">{{ object.bio }}</p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="card-actions justify-end mt-4">
         {% if object == request.user %}
           <a href="{% url 'users:settings_profile' %}" class="btn btn-primary">Edit Profile</a>
         {% endif %}

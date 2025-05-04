@@ -1,0 +1,124 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block title %}Display Settings - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+  <!-- Page Header -->
+  <div class="space-y-0.5">
+    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Display Settings</h1>
+    <p class="text-base-content/70">Customize how LifeTracker looks and feels.</p>
+  </div>
+
+  <div class="divider my-2"></div>
+
+  <!-- Settings Layout -->
+  <div class="flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12">
+    <!-- Sidebar -->
+    <aside class="top-0 lg:sticky lg:w-1/5">
+      {% include "layouts/settings_nav.html" %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex w-full overflow-y-hidden p-1">
+      <div class="flex flex-1 flex-col">
+
+        <!-- Display Settings Form -->
+        <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
+          <div class="-mx-1 px-1.5 lg:max-w-xl">
+            <form class="space-y-6" method="post" action="{% url 'users:settings_display' %}">
+              {% csrf_token %}
+
+              <!-- Theme Selection -->
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text font-medium">Theme</span>
+                </label>
+                <select name="theme" id="theme" class="select select-bordered w-full">
+                  <option value="" {% if not user.theme %}selected{% endif %}>System Default (Light/Dark)</option>
+                  <option value="light" {% if user.theme == 'light' %}selected{% endif %}>Light</option>
+                  <option value="dark" {% if user.theme == 'dark' %}selected{% endif %}>Dark</option>
+                  <option value="cupcake" {% if user.theme == 'cupcake' %}selected{% endif %}>Cupcake</option>
+                  <option value="bumblebee" {% if user.theme == 'bumblebee' %}selected{% endif %}>Bumblebee</option>
+                  <option value="emerald" {% if user.theme == 'emerald' %}selected{% endif %}>Emerald</option>
+                  <option value="corporate" {% if user.theme == 'corporate' %}selected{% endif %}>Corporate</option>
+                  <option value="synthwave" {% if user.theme == 'synthwave' %}selected{% endif %}>Synthwave</option>
+                  <option value="retro" {% if user.theme == 'retro' %}selected{% endif %}>Retro</option>
+                  <option value="cyberpunk" {% if user.theme == 'cyberpunk' %}selected{% endif %}>Cyberpunk</option>
+                  <option value="valentine" {% if user.theme == 'valentine' %}selected{% endif %}>Valentine</option>
+                  <option value="halloween" {% if user.theme == 'halloween' %}selected{% endif %}>Halloween</option>
+                  <option value="garden" {% if user.theme == 'garden' %}selected{% endif %}>Garden</option>
+                  <option value="forest" {% if user.theme == 'forest' %}selected{% endif %}>Forest</option>
+                  <option value="aqua" {% if user.theme == 'aqua' %}selected{% endif %}>Aqua</option>
+                  <option value="lofi" {% if user.theme == 'lofi' %}selected{% endif %}>Lo-Fi</option>
+                  <option value="pastel" {% if user.theme == 'pastel' %}selected{% endif %}>Pastel</option>
+                  <option value="fantasy" {% if user.theme == 'fantasy' %}selected{% endif %}>Fantasy</option>
+                  <option value="wireframe" {% if user.theme == 'wireframe' %}selected{% endif %}>Wireframe</option>
+                  <option value="black" {% if user.theme == 'black' %}selected{% endif %}>Black</option>
+                  <option value="luxury" {% if user.theme == 'luxury' %}selected{% endif %}>Luxury</option>
+                  <option value="dracula" {% if user.theme == 'dracula' %}selected{% endif %}>Dracula</option>
+                  <option value="cmyk" {% if user.theme == 'cmyk' %}selected{% endif %}>CMYK</option>
+                  <option value="autumn" {% if user.theme == 'autumn' %}selected{% endif %}>Autumn</option>
+                  <option value="business" {% if user.theme == 'business' %}selected{% endif %}>Business</option>
+                  <option value="acid" {% if user.theme == 'acid' %}selected{% endif %}>Acid</option>
+                  <option value="lemonade" {% if user.theme == 'lemonade' %}selected{% endif %}>Lemonade</option>
+                  <option value="night" {% if user.theme == 'night' %}selected{% endif %}>Night</option>
+                  <option value="coffee" {% if user.theme == 'coffee' %}selected{% endif %}>Coffee</option>
+                  <option value="winter" {% if user.theme == 'winter' %}selected{% endif %}>Winter</option>
+                </select>
+                <label class="label">
+                  <span class="label-text-alt text-base-content/70">Select a theme or use system default (light/dark)</span>
+                </label>
+              </div>
+
+              <!-- Theme Preview -->
+              <div class="card bg-base-200 p-4 shadow">
+                <h3 class="mb-4 font-medium">Theme Preview</h3>
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  <span class="badge">Neutral</span>
+                  <span class="badge badge-primary">Primary</span>
+                  <span class="badge badge-secondary">Secondary</span>
+                  <span class="badge badge-accent">Accent</span>
+                  <span class="badge badge-info">Info</span>
+                  <span class="badge badge-success">Success</span>
+                  <span class="badge badge-warning">Warning</span>
+                  <span class="badge badge-error">Error</span>
+                </div>
+                <div class="divider"></div>
+                <div class="flex flex-wrap gap-2">
+                  <button class="btn">Default</button>
+                  <button class="btn btn-primary">Primary</button>
+                  <button class="btn btn-secondary">Secondary</button>
+                  <button class="btn btn-accent">Accent</button>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn btn-primary">Save Display Settings</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block inline_javascript %}
+<script>
+  document.getElementById('theme').addEventListener('change', function() {
+    const selectedTheme = this.value;
+    if (selectedTheme) {
+      document.documentElement.setAttribute('data-theme', selectedTheme);
+    } else {
+      // If system default, check for dark mode preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+  });
+</script>
+{% endblock inline_javascript %}
+{% endblock content %} 

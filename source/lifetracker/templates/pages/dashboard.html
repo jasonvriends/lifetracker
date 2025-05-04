@@ -80,36 +80,26 @@
         <div class="space-y-4">
           <div class="flex gap-3 items-start">
             <div class="avatar placeholder">
-              <div class="bg-primary text-primary-content w-8 rounded-full">
-                <span class="text-xs">JD</span>
-              </div>
+              {% if user.is_authenticated and user.avatar %}
+                <div class="rounded-full w-8">
+                  <img src="{{ user.avatar.url }}" alt="{{ user.get_initials }}" />
+                </div>
+              {% else %}
+                <div class="bg-neutral-focus text-neutral-content rounded-full w-8">
+                  <span class="text-xs">{{ user.get_initials }}</span>
+                </div>
+              {% endif %}
             </div>
             <div>
-              <p class="font-medium">Completed daily meditation</p>
-              <p class="text-sm text-base-content/70">2 hours ago</p>
+              <h3 class="font-bold">Today's Tasks</h3>
+              <p class="text-xs text-base-content/70">3 of 5 remaining</p>
             </div>
           </div>
-          <div class="flex gap-3 items-start">
-            <div class="avatar placeholder">
-              <div class="bg-success text-success-content w-8 rounded-full">
-                <span class="text-xs">✓</span>
-              </div>
-            </div>
-            <div>
-              <p class="font-medium">Achieved weekly exercise goal</p>
-              <p class="text-sm text-base-content/70">5 hours ago</p>
-            </div>
-          </div>
-          <div class="flex gap-3 items-start">
-            <div class="avatar placeholder">
-              <div class="bg-warning text-warning-content w-8 rounded-full">
-                <span class="text-xs">!</span>
-              </div>
-            </div>
-            <div>
-              <p class="font-medium">Reminder: Update health metrics</p>
-              <p class="text-sm text-base-content/70">1 day ago</p>
-            </div>
+
+          <!-- Add Task button -->
+          <div class="flex flex-col gap-2 mt-2">
+            <!-- Task items would be here -->
+            <a href="/tasks" class="btn btn-sm btn-neutral justify-start">View All Tasks</a>
           </div>
         </div>
       </div>
@@ -192,6 +182,58 @@
             </svg>
             Update Health Metrics
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Habit Tracking Card -->
+    <div class="card card-compact bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="flex gap-3 items-start">
+          <div class="avatar placeholder">
+            {% if user.is_authenticated and user.avatar %}
+              <div class="rounded-full w-8">
+                <img src="{{ user.avatar.url }}" alt="{{ user.get_initials }}" />
+              </div>
+            {% else %}
+              <div class="bg-success text-success-content rounded-full w-8">
+                <span class="text-xs">✓</span>
+              </div>
+            {% endif %}
+          </div>
+          <div>
+            <h3 class="font-bold">Habit Streaks</h3>
+            <p class="text-xs text-base-content/70">Keep your momentum going!</p>
+          </div>
+        </div>
+
+        <!-- Habits list -->
+        <div class="flex flex-col gap-2 mt-2">
+          <!-- Habit items would be here -->
+          <a href="/habits" class="btn btn-sm btn-neutral justify-start">View All Habits</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals Progress Card -->
+    <div class="card card-compact bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="flex gap-3 items-start">
+          <div class="avatar placeholder">
+            {% if user.is_authenticated and user.avatar %}
+              <div class="rounded-full w-8">
+                <img src="{{ user.avatar.url }}" alt="{{ user.get_initials }}" />
+              </div>
+            {% else %}
+              <div class="bg-warning text-warning-content rounded-full w-8">
+                <span class="text-xs">!</span>
+              </div>
+            {% endif %}
+          </div>
+          <div>
+            <h3 class="font-bold">Goals Progress</h3>
+            <p class="text-xs text-base-content/70">Track your long-term goals</p>
+          </div>
         </div>
       </div>
     </div>

@@ -20,16 +20,29 @@
       {{ redirect_field }}
 
       <!-- Name -->
-      <div class="form-control">
-        <label class="label" for="{{ form.name.id_for_label }}">
-          <span class="label-text">{% trans "Name" %}</span>
-        </label>
-        <input type="text" name="{{ form.name.html_name }}" class="input input-bordered w-full" placeholder="John Doe" required>
-        {% if form.name.errors %}
-          <label class="label">
-            <span class="label-text-alt text-error">{{ form.name.errors|join:", " }}</span>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label" for="{{ form.first_name.id_for_label }}">
+            <span class="label-text">{% trans "First Name" %}</span>
           </label>
-        {% endif %}
+          <input type="text" name="{{ form.first_name.html_name }}" class="input input-bordered w-full" placeholder="John" required>
+          {% if form.first_name.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.first_name.errors|join:", " }}</span>
+            </label>
+          {% endif %}
+        </div>
+        <div class="form-control">
+          <label class="label" for="{{ form.last_name.id_for_label }}">
+            <span class="label-text">{% trans "Last Name" %}</span>
+          </label>
+          <input type="text" name="{{ form.last_name.html_name }}" class="input input-bordered w-full" placeholder="Doe" required>
+          {% if form.last_name.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.last_name.errors|join:", " }}</span>
+            </label>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Email -->

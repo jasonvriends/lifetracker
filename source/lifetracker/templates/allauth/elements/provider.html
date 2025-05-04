@@ -1,3 +1,5 @@
+{% load socialaccount %}
+
 <li>
-    <a title="{{ attrs.name }}" href="{{ attrs.href }}">{{ attrs.name }}</a>
+    <a title="{{ provider.name }}" href="{% provider_login_url provider.id %}">{{ provider.name }}</a>
 </li>

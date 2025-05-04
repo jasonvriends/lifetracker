@@ -1,5 +1,7 @@
 {% load allauth %}
 <ul>
-    {% slot %}
-    {% endslot %}
+    {% for provider in providers %}
+        {% element provider provider=provider %}
+        {% endelement %}
+    {% endfor %}
 </ul>

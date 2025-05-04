@@ -89,11 +89,19 @@
                   <h3 class="card-title">Profile Information</h3>
                   <form method="post" action="{% url 'users:settings_profile' %}" class="space-y-4">
                     {% csrf_token %}
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text">Name</span>
-                      </label>
-                      <input type="text" name="name" value="{{ request.user.name }}" class="input input-bordered" />
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text">First Name</span>
+                        </label>
+                        <input type="text" name="first_name" value="{{ request.user.first_name }}" class="input input-bordered" />
+                      </div>
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text">Last Name</span>
+                        </label>
+                        <input type="text" name="last_name" value="{{ request.user.last_name }}" class="input input-bordered" />
+                      </div>
                     </div>
                     <div class="form-control">
                       <label class="label">

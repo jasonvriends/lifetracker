@@ -27,8 +27,74 @@
         <!-- Profile Form -->
         <div class="faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12">
           <div class="-mx-1 px-1.5 lg:max-w-xl">
-            <form class="" method="post">
+            <form class="space-y-6" method="post" enctype="multipart/form-data" action="{% url 'users:settings_profile' %}">
               {% csrf_token %}
+
+              <!-- Avatar -->
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text font-medium">Profile Picture</span>
+                </label>
+                <div class="flex items-center space-x-4">
+                  <div class="relative">
+                    {% if user.avatar %}
+                      <img src="{{ user.avatar.url }}" alt="Profile Picture" class="h-24 w-24 rounded-full object-cover">
+                      <button type="button" class="delete-avatar absolute -top-2 -right-2 rounded-full bg-base-100 p-1 shadow-lg hover:bg-base-200" onclick="deleteAvatar()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    {% else %}
+                      <div class="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-primary-content">
+                        <span class="text-2xl font-bold">{{ user.get_initials }}</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="flex-1">
+                    <input type="file" name="avatar" id="avatar" class="file-input file-input-bordered w-full" accept="image/*">
+                    <label class="label">
+                      <span class="label-text-alt text-base-content/70">Upload a new profile picture (max 5MB)</span>
+                    </label>
+                    {% if form.avatar.errors %}
+                      <div class="text-error text-sm">
+                        {% for error in form.avatar.errors %}
+                          {{ error }}
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- First Name -->
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text font-medium">First Name</span>
+                </label>
+                <input type="text" name="first_name" id="first_name" class="input input-bordered w-full" value="{{ user.first_name }}" placeholder="Your first name">
+                {% if form.first_name.errors %}
+                  <div class="text-error text-sm">
+                    {% for error in form.first_name.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Last Name -->
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text font-medium">Last Name</span>
+                </label>
+                <input type="text" name="last_name" id="last_name" class="input input-bordered w-full" value="{{ user.last_name }}" placeholder="Your last name">
+                {% if form.last_name.errors %}
+                  <div class="text-error text-sm">
+                    {% for error in form.last_name.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
 
               <!-- Bio -->
               <div class="form-control w-full">
@@ -65,4 +131,36 @@
     </div>
   </div>
 </div>
+
+{% block inline_javascript %}
+<script>
+function deleteAvatar() {
+  if (confirm('Are you sure you want to delete your profile picture?')) {
+    const form = new FormData();
+    form.append('delete_avatar', 'true');
+    form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('{% url "users:settings_profile" %}', {
+      method: 'POST',
+      body: form,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        window.location.reload();
+      } else {
+        alert('Error deleting profile picture');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error deleting profile picture');
+    });
+  }
+}
+</script>
+{% endblock inline_javascript %}
 {% endblock content %} 
