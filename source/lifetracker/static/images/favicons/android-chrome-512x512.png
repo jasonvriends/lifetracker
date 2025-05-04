@@ -1,0 +1,7 @@
+<!-- This is an SVG file masquerading as PNG since we don't have image creation capabilities -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#6419E6" rx="96" />
+  <path d="M128 128 H384 V384 H128 Z" fill="white" opacity="0.7" rx="32" />
+  <path d="M172 216 H340 M172 256 H340 M172 296 H340" stroke="white" stroke-width="24" stroke-linecap="round" />
+  <text x="256" y="424" font-family="Arial" font-size="36" fill="white" text-anchor="middle">LifeTracker</text>
+</svg> 
