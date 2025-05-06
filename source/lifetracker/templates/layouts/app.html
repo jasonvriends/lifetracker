@@ -40,8 +40,8 @@
             </a>
           </li>
           {% if request.path != '/dashboard/' %}
-            {% if request.path == '/journal/' %}
-              <li><a href="{% url 'journal' %}">Journal</a></li>
+            {% if request.path == '/diary/' or '/diary/' in request.path %}
+              <li><a href="{% url 'diary:list' %}">Diary</a></li>
             {% elif request.path == '/habits/' %}
               <li><a href="{% url 'habits' %}">Habits</a></li>
             {% elif request.path == '/goals/' %}
@@ -127,11 +127,11 @@
           </a>
         </li>
         <li>
-          <a href="{% url 'journal' %}" class="{% if request.path == '/journal/' %}active{% endif %} hover:bg-base-300 gap-4">
+          <a href="{% url 'diary:list' %}" class="{% if '/diary/' in request.path %}active{% endif %} hover:bg-base-300 gap-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            Journal
+            Diary
           </a>
         </li>
         <li>

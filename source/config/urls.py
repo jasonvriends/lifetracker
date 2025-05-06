@@ -10,7 +10,7 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path("dashboard/", TemplateView.as_view(template_name="pages/dashboard.html"), name="dashboard"),
     path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
-    path("journal/", TemplateView.as_view(template_name="pages/journal.html"), name="journal"),
+    path("diary/", include("lifetracker.diary.urls", namespace="diary")),
     path("habits/", TemplateView.as_view(template_name="pages/habits.html"), name="habits"),
     path("goals/", TemplateView.as_view(template_name="pages/goals.html"), name="goals"),
     path("metrics/", TemplateView.as_view(template_name="pages/metrics.html"), name="metrics"),

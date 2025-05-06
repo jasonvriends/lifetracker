@@ -1,0 +1,126 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+
+{% block head_title %}My Diary{% endblock head_title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">My Diary</h1>
+    <div class="flex items-center mt-4 md:mt-0">
+      <a href="{% url 'diary:create' %}?date={{ formatted_date }}" class="btn btn-primary">New Entry</a>
+    </div>
+  </div>
+
+  <!-- Date Selector -->
+  <div class="card bg-base-200 shadow-lg mb-8">
+    <div class="card-body p-4">
+      <form method="get" action="{% url 'diary:list' %}" id="date-form" class="flex items-center justify-between gap-2">
+        <!-- Previous Day Arrow -->
+        <a href="?date={{ prev_date }}" class="btn btn-circle btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        
+        <!-- Date Display and Hidden Input -->
+        <div class="flex flex-col items-center flex-grow max-w-xs">
+          <input 
+            type="date" 
+            name="date" 
+            id="date-picker"
+            value="{{ formatted_date }}" 
+            class="hidden"
+          >
+          <div class="text-center cursor-pointer" onclick="document.getElementById('date-picker').showPicker()">
+            <span class="text-lg font-bold">{{ selected_date|date:"F j, Y" }}</span>
+            <div class="text-xs text-base-content/70 mt-1">Click to change date</div>
+          </div>
+        </div>
+        
+        <!-- Next Day Arrow -->
+        <a href="?date={{ next_date }}" class="btn btn-circle btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <!-- Entries -->
+  <div class="space-y-6">
+    {% if page_obj %}
+      {% for entry in page_obj %}
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <div class="flex justify-between items-start">
+              <h2 class="card-title">{{ entry.title }}</h2>
+              <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                  </svg>
+                </div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                  <li><a href="{% url 'diary:update' entry.pk %}">Edit</a></li>
+                  <li><a href="{% url 'diary:delete' entry.pk %}" class="text-error">Delete</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex flex-col md:flex-row md:gap-4 text-sm text-base-content/70">
+              <p>Recorded: {{ entry.recorded_at|date:"F j, Y g:i A" }}</p>
+              <p>Created: {{ entry.created_at|date:"F j, Y g:i A" }}</p>
+            </div>
+            <div class="divider"></div>
+            <div class="prose">
+              {{ entry.content|linebreaks }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      
+      <!-- Pagination -->
+      {% if page_obj.paginator.num_pages > 1 %}
+        <div class="join flex justify-center mt-8">
+          {% if page_obj.has_previous %}
+            <a href="?date={{ formatted_date }}&page={{ page_obj.previous_page_number }}" class="join-item btn">«</a>
+          {% else %}
+            <button class="join-item btn btn-disabled">«</button>
+          {% endif %}
+          
+          {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+              <button class="join-item btn btn-active">{{ i }}</button>
+            {% else %}
+              <a href="?date={{ formatted_date }}&page={{ i }}" class="join-item btn">{{ i }}</a>
+            {% endif %}
+          {% endfor %}
+          
+          {% if page_obj.has_next %}
+            <a href="?date={{ formatted_date }}&page={{ page_obj.next_page_number }}" class="join-item btn">»</a>
+          {% else %}
+            <button class="join-item btn btn-disabled">»</button>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body text-center p-12">
+          <h3 class="text-xl font-semibold mb-4">No entries for this date</h3>
+          <p class="mb-6">You haven't created any diary entries for {{ selected_date|date:"F j, Y" }}.</p>
+          <a href="{% url 'diary:create' %}?date={{ formatted_date }}" class="btn btn-primary">Create New Entry</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Update form when date picker is changed
+  document.getElementById('date-picker').addEventListener('change', function() {
+    document.getElementById('date-form').submit();
+  });
+</script>
+{% endblock %} 
