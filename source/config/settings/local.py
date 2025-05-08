@@ -67,7 +67,22 @@ DEBUG_TOOLBAR_CONFIG = {
         "debug_toolbar.panels.urls.URLsPanel",
     ],
     "SHOW_TEMPLATE_CONTEXT": True,
+    "SKIP_TEMPLATE_PREFIXES": (
+        "django/forms/widgets/",
+        "admin/widgets/",
+        "debug_toolbar/",
+        ".well-known/",
+    ),
 }
+
+def show_toolbar(request):
+    """Show toolbar based on the request."""
+    if request.path.startswith('/.well-known/'):
+        return False
+    return bool(DEBUG and (request.META.get('REMOTE_ADDR') in INTERNAL_IPS))
+
+DEBUG_TOOLBAR_CONFIG["SHOW_TOOLBAR_CALLBACK"] = "config.settings.local.show_toolbar"
+
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#internal-ips
 INTERNAL_IPS = ["127.0.0.1", "10.0.2.2"]
 
