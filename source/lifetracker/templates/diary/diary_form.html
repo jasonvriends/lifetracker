@@ -1,5 +1,6 @@
 {% extends "layouts/app.html" %}
 {% load static i18n %}
+{% load tz %}
 
 {% block head_title %}{% if is_create %}New Diary Entry{% else %}Edit Diary Entry{% endif %}{% endblock head_title %}
 
@@ -44,7 +45,9 @@
               <span class="label-text-alt">{{ form.recorded_at.help_text }}</span>
             {% endif %}
           </label>
+          {% timezone user.timezone %}
           {{ form.recorded_at }}
+          {% endtimezone %}
           {% if form.recorded_at.errors %}
             <label class="label">
               <span class="label-text-alt text-error">{{ form.recorded_at.errors.0 }}</span>
@@ -93,4 +96,22 @@
     </div>
   </div>
 </div>
+
+{% block extra_js %}
+<script>
+  // Ensure the datetime-local input shows the correct timezone
+  document.addEventListener('DOMContentLoaded', function() {
+    const datetimeInput = document.querySelector('input[type="datetime-local"]');
+    if (datetimeInput && !datetimeInput.value) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+  });
+</script>
+{% endblock %}
 {% endblock %} 

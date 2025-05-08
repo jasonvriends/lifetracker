@@ -76,26 +76,14 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["timezones"] = sorted(available_timezones())
-        if self.request.user.avatar:
-            logger.debug("Avatar URL: %s", self.request.user.avatar.url)
-            logger.debug("Avatar path: %s", self.request.user.avatar.path)
         return context
 
     def form_valid(self, form):
-        logger.debug("Form data: %s", form.cleaned_data)
-        logger.debug("Files: %s", self.request.FILES)
+        logger.info("Processing profile update for user %s", self.request.user.email)
         
         if 'avatar' in self.request.FILES:
-            logger.debug("Avatar found in request.FILES")
+            logger.info("Processing avatar upload for user %s", self.request.user.email)
             avatar_file = self.request.FILES['avatar']
-            logger.debug("Avatar file name: %s", avatar_file.name)
-            logger.debug("Avatar file size: %s", avatar_file.size)
-            logger.debug("Avatar content type: %s", avatar_file.content_type)
-            
-            # Read a bit of the file to verify content
-            content_start = avatar_file.read(100)
-            logger.debug("Avatar file content: %s", content_start)
-            avatar_file.seek(0)  # Reset file pointer after reading
             
             # Verify file is not empty
             if avatar_file.size == 0:
@@ -105,7 +93,7 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
             
             try:
                 validate_avatar(avatar_file)
-                logger.debug("Avatar validation passed")
+                logger.info("Avatar validation passed")
             except ValidationError as e:
                 logger.error("Avatar validation failed: %s", e)
                 form.add_error('avatar', e)
@@ -114,13 +102,12 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
             # Delete old avatar if it exists
             user = self.get_object()
             if user.avatar:
-                logger.debug("Deleting old avatar")
+                logger.info("Deleting old avatar for user %s", user.email)
                 try:
                     old_path = user.avatar.path
-                    logger.debug("Old avatar path: %s", old_path)
                     if os.path.exists(old_path):
                         os.remove(old_path)
-                        logger.debug("Successfully deleted old avatar file")
+                        logger.info("Successfully deleted old avatar file")
                 except Exception as e:
                     logger.error("Error deleting old avatar: %s", e)
                 
@@ -131,15 +118,9 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
             # Manually handle the file upload
             from lifetracker.users.models import get_avatar_path
             
-            # Generate the path
+            # Generate the path and save the file
             path = get_avatar_path(user, avatar_file.name)
-            logger.debug("Generated path for avatar: %s", path)
-            
-            # Save the file
             full_path = os.path.join(settings.MEDIA_ROOT, path)
-            logger.debug("Full path for avatar: %s", full_path)
-            
-            # Ensure the directory exists
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
             
             # Save the file directly
@@ -150,41 +131,22 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
             # Verify file was saved
             if os.path.exists(full_path):
                 file_size = os.path.getsize(full_path)
-                logger.debug("File saved successfully. Size: %s bytes", file_size)
                 if file_size == 0:
                     logger.error("Saved file has 0 bytes!")
             else:
                 logger.error("File was not saved at %s", full_path)
             
-            # Update the model
+            # Update the model and form
             user.avatar = path
-            logger.debug("Setting user avatar to: %s", path)
-            
-            # Update the form
             form.instance.avatar = path
         
         try:
-            # Save the form
             self.object = form.save()
-            logger.debug("Form saved successfully")
-            
-            if self.object.avatar:
-                logger.debug("New avatar details:")
-                logger.debug("- Name: %s", self.object.avatar.name)
-                logger.debug("- URL: %s", self.object.avatar.url)
-                logger.debug("- Path: %s", self.object.avatar.path)
-                if os.path.exists(self.object.avatar.path):
-                    logger.debug("- Size: %s", os.path.getsize(self.object.avatar.path))
-                    logger.debug("File exists at the expected path")
-                else:
-                    logger.error("File does not exist at path: %s", self.object.avatar.path)
-            else:
-                logger.debug("No avatar set after save")
-            
+            logger.info("Profile updated successfully for user %s", self.request.user.email)
             messages.success(self.request, "Profile updated successfully.")
             return super().form_valid(form)
         except Exception as e:
-            logger.error("Error saving form: %s", e)
+            logger.error("Error saving profile for user %s: %s", self.request.user.email, e)
             form.add_error(None, "Error saving profile. Please try again.")
             return self.form_invalid(form)
 
@@ -196,18 +158,15 @@ class UserSettingsProfileView(LoginRequiredMixin, UpdateView):
             user = self.get_object()
             if user.avatar:
                 try:
-                    # Get the file path before deleting
                     avatar_path = user.avatar.path
-                    logger.debug("Deleting avatar at path: %s", avatar_path)
-                    # Delete the file from storage if it exists
                     if os.path.exists(avatar_path):
                         os.remove(avatar_path)
-                        logger.debug("Successfully deleted avatar file")
+                        logger.info("Successfully deleted avatar for user %s", user.email)
                     user.avatar = None
                     user.save()
                     return JsonResponse({'status': 'success'})
                 except Exception as e:
-                    logger.error("Error deleting avatar: %s", e)
+                    logger.error("Error deleting avatar for user %s: %s", user.email, e)
                     return JsonResponse({'status': 'error', 'message': str(e)})
             return JsonResponse({'status': 'error', 'message': 'No avatar to delete'})
         return super().post(request, *args, **kwargs)

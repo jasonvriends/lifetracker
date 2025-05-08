@@ -148,6 +148,12 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
+        # Add lifetracker.users logger with INFO level
+        "lifetracker.users": {
+            "level": "INFO",
+            "handlers": ["console"],
+            "propagate": False,
+        },
     },
 }
 

@@ -37,18 +37,56 @@ class DiaryForm(forms.ModelForm):
         self.user = user
         super().__init__(*args, **kwargs)
         
-        # If it's a new entry (not editing), set the default datetime to now in user's timezone
-        if user and not kwargs.get('instance'):
-            user_tz = zoneinfo.ZoneInfo(user.timezone)
-            current_datetime = timezone.localtime(timezone.now(), timezone=user_tz)
+        if not user:
+            return
+            
+        # Get user's timezone
+        user_tz = zoneinfo.ZoneInfo(user.timezone)
+        
+        # If it's a new entry (not editing)
+        if not kwargs.get('instance'):
+            # Get current time in UTC
+            utc_now = timezone.now()
+            # Convert to user's timezone
+            local_now = timezone.localtime(utc_now, timezone=user_tz)
             
             # Format for datetime-local input (HTML5 standard)
-            self.fields['recorded_at'].initial = current_datetime
+            formatted_datetime = local_now.strftime('%Y-%m-%dT%H:%M')
+            
+            # Set both initial and widget value
+            self.fields['recorded_at'].initial = local_now
+            self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
+            self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
+            
+        # For existing entries
         elif kwargs.get('instance'):
-            # For existing entries, make sure we're showing the time in user's timezone
-            if user:
-                user_tz = zoneinfo.ZoneInfo(user.timezone)
-                instance = kwargs.get('instance')
-                if instance and instance.recorded_at:
-                    localized_dt = timezone.localtime(instance.recorded_at, timezone=user_tz)
-                    self.initial['recorded_at'] = localized_dt 
+            instance = kwargs.get('instance')
+            if instance and instance.recorded_at:
+                # Convert stored UTC time to user's local time
+                local_time = timezone.localtime(instance.recorded_at, timezone=user_tz)
+                
+                # Format for datetime-local input
+                formatted_datetime = local_time.strftime('%Y-%m-%dT%H:%M')
+                
+                # Set both initial and widget value
+                self.fields['recorded_at'].initial = local_time
+                self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
+                self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
+    
+    def clean_recorded_at(self):
+        """Clean the recorded_at field to ensure proper timezone handling."""
+        recorded_at = self.cleaned_data.get('recorded_at')
+        
+        if not recorded_at or not self.user:
+            return recorded_at
+            
+        # Get user's timezone
+        user_tz = zoneinfo.ZoneInfo(self.user.timezone)
+        
+        # The datetime from the form will be naive - make it timezone aware
+        if timezone.is_naive(recorded_at):
+            # Interpret the naive datetime as being in the user's timezone
+            recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
+        
+        # Convert to UTC for storage
+        return recorded_at.astimezone(timezone.utc) 

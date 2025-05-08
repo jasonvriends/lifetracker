@@ -85,33 +85,28 @@ def diary_create(request):
     # Store the original date the user was viewing
     original_date = request.GET.get('date')
     
+    # Get user's timezone
+    user_tz = zoneinfo.ZoneInfo(request.user.timezone)
+    
     if request.method == 'POST':
         form = DiaryForm(request.user, request.POST)
         
         if form.is_valid():
-            # Get the cleaned recorded_at value, which should already be timezone-aware
+            # Get the cleaned recorded_at value, which should already be timezone-aware in UTC
             recorded_at = form.cleaned_data.get('recorded_at')
-            
-            # Ensure we're using the user's timezone consistently
-            user_tz = zoneinfo.ZoneInfo(request.user.timezone)
             
             # Create diary entry but don't save yet
             diary_entry = form.save(commit=False)
             diary_entry.user = request.user
+            diary_entry.recorded_at = recorded_at  # Already in UTC from form cleaning
             
-            # Make sure recorded_at is timezone aware in the user's timezone
-            if recorded_at and not timezone.is_aware(recorded_at):
-                diary_entry.recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
-            else:
-                diary_entry.recorded_at = recorded_at
-                
             # Save the entry
             diary_entry.save()
             
             messages.success(request, "Diary entry created successfully.")
             
             # Redirect back to the original date the user was viewing
-            redirect_date = original_date if original_date else timezone.localtime(timezone.now(), timezone=user_tz).date().strftime('%Y-%m-%d')
+            redirect_date = original_date if original_date else timezone.localtime(recorded_at, timezone=user_tz).date().strftime('%Y-%m-%d')
             return redirect(f"{reverse('diary:list')}?date={redirect_date}")
     else:
         # Pre-fill date if it's passed in query string
@@ -121,10 +116,9 @@ def diary_create(request):
             try:
                 # Convert the date string to a datetime at the current time
                 selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-                user_tz = zoneinfo.ZoneInfo(request.user.timezone)
                 current_time = timezone.localtime(timezone.now(), timezone=user_tz).time()
                 
-                # Combine the selected date with current time
+                # Combine the selected date with current time in user's timezone
                 initial_datetime = timezone.make_aware(
                     datetime.combine(selected_date, current_time),
                     timezone=user_tz
@@ -132,10 +126,9 @@ def diary_create(request):
                 initial['recorded_at'] = initial_datetime
             except ValueError:
                 pass
-                
+        
         form = DiaryForm(request.user, initial=initial)
     
-    # Pass the original date to the template so we can use it in form submission
     return render(request, 'diary/diary_form.html', {
         'form': form,
         'is_create': True,
