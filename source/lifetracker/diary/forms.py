@@ -89,4 +89,4 @@ class DiaryForm(forms.ModelForm):
             recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
         
         # Convert to UTC for storage
-        return recorded_at.astimezone(timezone.utc) 
+        return recorded_at.astimezone(zoneinfo.ZoneInfo("UTC")) 
