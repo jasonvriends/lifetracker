@@ -147,8 +147,7 @@
               </svg>
             </div>
             <h3 class="text-xl font-semibold mb-4">No entries for this date</h3>
-            <p class="mb-6 text-base-content/70">You haven't created any diary entries for {{ selected_date|date:"F j, Y" }}.</p>
-            <a href="{% url 'diary:create' %}?date={{ formatted_date }}" class="btn btn-primary btn-wide">Create New Entry</a>
+            <p class="text-base-content/70">You haven't created any diary entries for {{ selected_date|date:"F j, Y" }}.</p>
           </div>
         </div>
       </div>
