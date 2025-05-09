@@ -28,6 +28,7 @@
         {% if original_date %}
         <input type="hidden" name="date" value="{{ original_date }}">
         {% endif %}
+        {{ form.ingredients_input }}
         
         {% if form.non_field_errors %}
           <div class="alert alert-error">
@@ -81,6 +82,18 @@
           {% endif %}
         </div>
 
+        <!-- Tags Field -->
+        <div class="form-control w-full mt-4">
+          <label class="label">
+            <span class="label-text">Ingredients</span>
+            <span class="label-text-alt">Press Enter to add an ingredient (max 5)</span>
+          </label>
+          <div class="flex flex-wrap gap-2 p-2 border rounded-lg bg-base-100" id="ingredient-container">
+            <input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="Type an ingredient and press Enter">
+          </div>
+          <div id="error-message" class="text-error text-sm mt-1 hidden">Maximum 5 ingredients allowed!</div>
+        </div>
+
         <!-- Favorite Toggle -->
         <div class="form-control w-full mt-4">
           <label class="label cursor-pointer justify-start gap-4">
@@ -128,8 +141,62 @@
     // Prevent form submission on Enter key
     const form = document.querySelector('form');
     form.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+      if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA' && event.target.id !== 'ingredient-input') {
         event.preventDefault();
+      }
+    });
+
+    // Ingredient input handling
+    const ingredientInput = document.getElementById('ingredient-input');
+    const ingredientContainer = document.getElementById('ingredient-container');
+    const errorMessage = document.getElementById('error-message');
+    const ingredientsHidden = document.getElementById('id_ingredients_input');
+    let ingredients = ingredientsHidden.value ? ingredientsHidden.value.split(',') : [];
+
+    // Initialize existing ingredients
+    if (ingredients.length > 0) {
+      ingredients.forEach(ingredient => {
+        if (ingredient.trim()) {
+          ingredientContainer.insertBefore(createIngredientElement(ingredient.trim()), ingredientInput);
+        }
+      });
+    }
+
+    function updateHiddenInput() {
+      ingredientsHidden.value = ingredients.join(',');
+    }
+
+    function createIngredientElement(ingredient) {
+      const ingredientElement = document.createElement('div');
+      ingredientElement.className = 'badge badge-primary gap-1';
+      ingredientElement.innerHTML = `
+        <span>${ingredient}</span>
+        <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
+      `;
+      ingredientElement.querySelector('button').addEventListener('click', () => {
+        ingredients = ingredients.filter(t => t !== ingredient);
+        ingredientElement.remove();
+        updateHiddenInput();
+        errorMessage.classList.add('hidden');
+      });
+      return ingredientElement;
+    }
+
+    ingredientInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && ingredientInput.value.trim()) {
+        e.preventDefault();
+        if (ingredients.length >= 5) {
+          errorMessage.classList.remove('hidden');
+          return;
+        }
+        const ingredient = ingredientInput.value.trim();
+        if (!ingredients.includes(ingredient)) {
+          ingredients.push(ingredient);
+          ingredientContainer.insertBefore(createIngredientElement(ingredient), ingredientInput);
+          updateHiddenInput();
+        }
+        ingredientInput.value = '';
+        errorMessage.classList.add('hidden');
       }
     });
   });

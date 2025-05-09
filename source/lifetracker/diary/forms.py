@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import date, datetime
 import zoneinfo
 
-from .models import Diary
+from .models import Diary, Ingredient
 
 class DiaryForm(forms.ModelForm):
     """Form for creating and editing diary entries."""
@@ -40,6 +40,12 @@ class DiaryForm(forms.ModelForm):
         }),
         label="Favorite"
     )
+
+    ingredients_input = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+        label="Ingredients"
+    )
     
     class Meta:
         model = Diary
@@ -74,17 +80,24 @@ class DiaryForm(forms.ModelForm):
         # For existing entries
         elif kwargs.get('instance'):
             instance = kwargs.get('instance')
-            if instance and instance.recorded_at:
-                # Convert stored UTC time to user's local time
-                local_time = timezone.localtime(instance.recorded_at, timezone=user_tz)
+            if instance:
+                if instance.recorded_at:
+                    # Convert stored UTC time to user's local time
+                    local_time = timezone.localtime(instance.recorded_at, timezone=user_tz)
+                    
+                    # Format for datetime-local input
+                    formatted_datetime = local_time.strftime('%Y-%m-%dT%H:%M')
+                    
+                    # Set both initial and widget value
+                    self.fields['recorded_at'].initial = local_time
+                    self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
+                    self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
                 
-                # Format for datetime-local input
-                formatted_datetime = local_time.strftime('%Y-%m-%dT%H:%M')
-                
-                # Set both initial and widget value
-                self.fields['recorded_at'].initial = local_time
-                self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
-                self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
+                # Set initial ingredients
+                if instance.ingredients.exists():
+                    self.fields['ingredients_input'].initial = ','.join(
+                        instance.ingredients.values_list('name', flat=True)
+                    )
     
     def clean_recorded_at(self):
         """Clean the recorded_at field to ensure proper timezone handling."""
@@ -102,4 +115,31 @@ class DiaryForm(forms.ModelForm):
             recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
         
         # Convert to UTC for storage
-        return recorded_at.astimezone(zoneinfo.ZoneInfo("UTC")) 
+        return recorded_at.astimezone(zoneinfo.ZoneInfo("UTC"))
+
+    def save(self, commit=True):
+        """Save the diary entry and handle ingredients."""
+        instance = super().save(commit=False)
+        
+        if self.user:
+            instance.user = self.user
+        
+        if commit:
+            instance.save()
+            
+            # Handle ingredients
+            ingredients_input = self.cleaned_data.get('ingredients_input', '').strip()
+            if ingredients_input:
+                # Clear existing ingredients
+                instance.ingredients.clear()
+                
+                # Add new ingredients
+                ingredient_names = [name.strip() for name in ingredients_input.split(',') if name.strip()]
+                for ingredient_name in ingredient_names:
+                    ingredient, _ = Ingredient.objects.get_or_create(
+                        user=self.user,
+                        name=ingredient_name
+                    )
+                    instance.ingredients.add(ingredient)
+            
+        return instance 
