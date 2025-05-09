@@ -15,7 +15,7 @@ class DiaryForm(forms.ModelForm):
             'step': '60'  # 1 minute step
         }),
         label="Date and Time",
-        help_text="Select the date and time for this entry",
+        help_text="Select the date and time for this entry (in your timezone)",
         input_formats=['%Y-%m-%dT%H:%M', '%Y-%m-%dT%H:%M:%S']
     )
     
@@ -59,7 +59,7 @@ class DiaryForm(forms.ModelForm):
         if not user:
             return
             
-        # Get user's timezone
+        # Get user's timezone from their profile
         user_tz = zoneinfo.ZoneInfo(user.timezone)
         
         # If it's a new entry (not editing)
@@ -82,7 +82,7 @@ class DiaryForm(forms.ModelForm):
             instance = kwargs.get('instance')
             if instance:
                 if instance.recorded_at:
-                    # Convert stored UTC time to user's local time
+                    # Convert stored UTC time to user's timezone
                     local_time = timezone.localtime(instance.recorded_at, timezone=user_tz)
                     
                     # Format for datetime-local input
@@ -106,7 +106,7 @@ class DiaryForm(forms.ModelForm):
         if not recorded_at or not self.user:
             return recorded_at
             
-        # Get user's timezone
+        # Get user's timezone from their profile
         user_tz = zoneinfo.ZoneInfo(self.user.timezone)
         
         # The datetime from the form will be naive - make it timezone aware
@@ -115,7 +115,7 @@ class DiaryForm(forms.ModelForm):
             recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
         
         # Convert to UTC for storage
-        return recorded_at.astimezone(zoneinfo.ZoneInfo("UTC"))
+        return recorded_at.astimezone(timezone.utc)
 
     def save(self, commit=True):
         """Save the diary entry and handle ingredients."""
