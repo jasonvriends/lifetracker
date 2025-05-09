@@ -24,10 +24,28 @@
   <div class="card bg-base-100 shadow-lg">
     <div class="card-body">
       <!-- Category Tabs -->
-      <div class="flex justify-center gap-2 mb-6">
-        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="eat">Food</button>
-        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="drink">Drink</button>
-        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="exercise">Exercise</button>
+      <div role="tablist" class="tabs tabs-boxed justify-center mb-6">
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="favorites">Favorites</a>
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="eat">Food</a>
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="drink">Drink</a>
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="exercise">Exercise</a>
+      </div>
+
+      <!-- Favorites Section -->
+      <div id="favorites-section" class="hidden">
+        <!-- Favorites Filter -->
+        <div class="flex justify-center mb-6">
+          <div class="join">
+            <button class="join-item btn" data-filter="all">All</button>
+            <button class="join-item btn" data-filter="eat">Food</button>
+            <button class="join-item btn" data-filter="drink">Drink</button>
+            <button class="join-item btn" data-filter="exercise">Exercise</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <!-- Favorites will be populated here -->
+        </div>
       </div>
 
       <form method="post" novalidate>
@@ -143,31 +161,53 @@
     const nameLabel = document.querySelector('.name-label');
     const notesLabel = document.querySelector('.notes-label');
     const ingredientInput = document.getElementById('ingredient-input');
+    const favoritesSection = document.getElementById('favorites-section');
+    const mainForm = document.querySelector('form');
     
-    // Set initial active tab based on form value or default to 'eat'
-    const initialCategory = categoryInput.value || 'eat';
+    // Set initial active tab based on form value or default to 'favorites' for new entries
+    const isCreate = '{{ is_create }}' === 'True';
+    const initialCategory = isCreate ? 'favorites' : (categoryInput.value || 'eat');
     const initialTab = document.querySelector(`[data-category="${initialCategory}"]`);
     if (initialTab) {
-      initialTab.classList.add('btn-primary');
+      initialTab.classList.add('tab-active');
     }
-    updateFormForCategory(initialCategory);
+
+    // If it's create mode, start with favorites view
+    if (isCreate) {
+      mainForm.classList.add('hidden');
+      favoritesSection.classList.remove('hidden');
+      loadFavorites();
+    } else {
+      updateFormForCategory(initialCategory);
+    }
     
     // Tab click handlers
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         // Remove active class from all tabs
-        tabs.forEach(t => t.classList.remove('btn-primary'));
+        tabs.forEach(t => t.classList.remove('tab-active'));
         // Add active class to clicked tab
-        tab.classList.add('btn-primary');
+        tab.classList.add('tab-active');
         // Update hidden category input
         const category = tab.getAttribute('data-category');
         categoryInput.value = category;
-        // Update form for selected category
-        updateFormForCategory(category);
+
+        if (category === 'favorites') {
+          loadFavorites();
+          mainForm.classList.add('hidden');
+          favoritesSection.classList.remove('hidden');
+        } else {
+          mainForm.classList.remove('hidden');
+          favoritesSection.classList.add('hidden');
+          updateFormForCategory(category);
+        }
       });
     });
-    
+
     function updateFormForCategory(category) {
+      // Don't update form if we're in favorites view
+      if (category === 'favorites') return;
+
       // Update field labels based on category
       switch(category) {
         case 'eat':
@@ -198,7 +238,215 @@
       }
     }
 
-    // Datetime handling
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    let currentFilter = 'all';
+    let favoritesList = [];
+
+    // Set initial active filter
+    const initialFilterButton = document.querySelector('[data-filter="all"]');
+    if (initialFilterButton) {
+      initialFilterButton.classList.add('btn-active');
+    }
+
+    // Filter click handlers
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all filters
+        filterButtons.forEach(b => b.classList.remove('btn-active'));
+        // Add active class to clicked filter
+        button.classList.add('btn-active');
+        // Update current filter
+        currentFilter = button.getAttribute('data-filter');
+        // Rerender favorites with current filter
+        renderFavorites(favoritesList);
+      });
+    });
+
+    // Function to load favorites
+    function loadFavorites() {
+      fetch('{% url "diary:favorites" %}')
+        .then(response => response.json())
+        .then(data => {
+          favoritesList = data;
+          renderFavorites(data);
+        })
+        .catch(error => {
+          console.error('Error loading favorites:', error);
+          showToast('Error loading favorites', 'error');
+        });
+    }
+
+    // Function to render favorites with current filter
+    function renderFavorites(favorites) {
+      const favoritesContainer = favoritesSection.querySelector('.grid');
+      favoritesContainer.innerHTML = '';
+      
+      const filteredFavorites = currentFilter === 'all' 
+        ? favorites 
+        : favorites.filter(f => f.category === currentFilter);
+      
+      filteredFavorites.forEach(favorite => {
+        const card = document.createElement('div');
+        card.className = 'card bg-base-200 shadow-md h-full';
+        card.innerHTML = `
+          <div class="card-body flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="card-title">${favorite.title}</h3>
+                <div class="badge badge-${getCategoryBadgeColor(favorite.category)}">${favorite.category}</div>
+              </div>
+              ${favorite.ingredients ? `
+              <div class="text-sm mt-2">
+                <strong>Ingredients:</strong>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  ${JSON.parse(favorite.ingredients).map(ing => 
+                    `<span class="badge badge-sm">${ing}</span>`
+                  ).join('')}
+                </div>
+              </div>
+              ` : ''}
+              <div class="text-sm mt-2">
+                <strong>Notes:</strong>
+                <p class="mt-1">${favorite.content}</p>
+              </div>
+            </div>
+            <div class="card-actions justify-end mt-4 gap-2">
+              <button type="button" class="btn btn-warning btn-sm" onclick='removeFavorite(${favorite.id}, this)'>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick='selectFavorite(${JSON.stringify(favorite).replace(/'/g, "&#39;")})'>
+                Use This
+              </button>
+            </div>
+          </div>
+        `;
+        favoritesContainer.appendChild(card);
+      });
+    }
+
+    // Function to get badge color based on category
+    function getCategoryBadgeColor(category) {
+      switch(category) {
+        case 'eat': return 'success';
+        case 'drink': return 'info';
+        case 'exercise': return 'warning';
+        default: return 'neutral';
+      }
+    }
+
+    // Function to show toast
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `alert alert-${type} fixed bottom-4 right-4 z-50 max-w-sm`;
+      toast.innerHTML = `<span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Function to select a favorite and populate the form
+    window.selectFavorite = function(favorite) {
+      // Switch to appropriate tab
+      const tab = document.querySelector(`[data-category="${favorite.category}"]`);
+      tab.click();
+
+      // Populate form fields
+      document.getElementById('id_title').value = favorite.title;
+      document.getElementById('id_content').value = favorite.content;
+      document.getElementById('id_category').value = favorite.category;
+
+      // Keep the current date/time value
+      const currentDateTime = document.getElementById('id_recorded_at').value;
+      if (!currentDateTime) {
+        // If no current date/time, set to now
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('id_recorded_at').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
+      if (favorite.ingredients) {
+        const ingredients = JSON.parse(favorite.ingredients);
+        document.getElementById('id_ingredients_input').value = JSON.stringify(ingredients);
+        const container = document.getElementById('ingredient-container');
+        container.innerHTML = '<input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="Type an ingredient and press Enter">';
+        ingredients.forEach(ingredient => {
+          container.insertBefore(createIngredientElement(ingredient), container.lastChild);
+        });
+      }
+
+      showToast('Favorite selected! Update the time if needed and save to record.', 'success');
+    };
+
+    // Ingredient handling
+    function createIngredientElement(ingredient) {
+      const ingredientElement = document.createElement('div');
+      ingredientElement.className = 'badge badge-primary gap-1';
+      ingredientElement.innerHTML = `
+        <span>${ingredient}</span>
+        <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
+      `;
+      ingredientElement.querySelector('button').addEventListener('click', () => {
+        ingredients = ingredients.filter(t => t !== ingredient);
+        ingredientElement.remove();
+        updateHiddenInput();
+        errorMessage.classList.add('hidden');
+      });
+      return ingredientElement;
+    }
+
+    // Initialize ingredients handling
+    const errorMessage = document.getElementById('error-message');
+    let ingredients = [];
+    try {
+      const existingValue = document.getElementById('id_ingredients_input').value;
+      if (existingValue) {
+        ingredients = JSON.parse(existingValue);
+        ingredients.forEach(ingredient => {
+          if (ingredient.trim()) {
+            document.getElementById('ingredient-container').insertBefore(
+              createIngredientElement(ingredient.trim()),
+              document.getElementById('ingredient-input')
+            );
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error parsing ingredients:', e);
+      ingredients = [];
+    }
+
+    function updateHiddenInput() {
+      document.getElementById('id_ingredients_input').value = JSON.stringify(ingredients);
+    }
+
+    // Handle ingredient input
+    document.getElementById('ingredient-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        e.preventDefault();
+        if (ingredients.length >= 5) {
+          errorMessage.classList.remove('hidden');
+          return;
+        }
+        const ingredient = e.target.value.trim();
+        if (!ingredients.includes(ingredient)) {
+          ingredients.push(ingredient);
+          document.getElementById('ingredient-container').insertBefore(
+            createIngredientElement(ingredient),
+            e.target
+          );
+          updateHiddenInput();
+        }
+        e.target.value = '';
+        errorMessage.classList.add('hidden');
+      }
+    });
+
+    // Initialize datetime if empty
     const datetimeInput = document.querySelector('input[type="datetime-local"]');
     if (datetimeInput && !datetimeInput.value) {
       const now = new Date();
@@ -210,73 +458,62 @@
       datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
-    // Prevent form submission on Enter key
-    const form = document.querySelector('form');
-    form.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA' && event.target.id !== 'ingredient-input') {
-        event.preventDefault();
-      }
-    });
+    // Function to remove from favorites
+    window.removeFavorite = function(id, buttonElement) {
+      // Show confirmation dialog using DaisyUI modal
+      const modal = document.createElement('dialog');
+      modal.className = 'modal modal-bottom sm:modal-middle';
+      modal.innerHTML = `
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Remove from Favorites</h3>
+          <p class="py-4">Are you sure you want to remove this item from your favorites?</p>
+          <div class="modal-action">
+            <button class="btn btn-ghost" onclick="this.closest('dialog').close()">Cancel</button>
+            <button class="btn btn-error" onclick="confirmRemoveFavorite(${id}, this.closest('dialog'))">Remove</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.showModal();
+    };
 
-    // Ingredient input handling
-    const ingredientContainer = document.getElementById('ingredient-container');
-    const errorMessage = document.getElementById('error-message');
-    const ingredientsHidden = document.getElementById('id_ingredients_input');
-    let ingredients = [];
-    
-    // Initialize existing ingredients from JSON
-    try {
-        const existingValue = ingredientsHidden.value;
-        if (existingValue) {
-            ingredients = JSON.parse(existingValue);
-            ingredients.forEach(ingredient => {
-                if (ingredient.trim()) {
-                    ingredientContainer.insertBefore(createIngredientElement(ingredient.trim()), ingredientInput);
-                }
-            });
+    // Function to handle the actual removal
+    window.confirmRemoveFavorite = function(id, modal) {
+      fetch(`{% url 'diary:update' pk=0 %}`.replace('0', id), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new URLSearchParams({
+          'favorite': 'false',
+          'action': 'toggle_favorite'
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          // Remove the card from the view
+          const card = document.querySelector(`[data-favorite-id="${id}"]`);
+          if (card) {
+            card.remove();
+          }
+          // Show success toast
+          showToast('Removed from favorites', 'success');
+          // Reload favorites to update the view
+          loadFavorites();
+        } else {
+          throw new Error('Failed to remove from favorites');
         }
-    } catch (e) {
-        console.error('Error parsing ingredients:', e);
-        ingredients = [];
-    }
-
-    function updateHiddenInput() {
-        ingredientsHidden.value = JSON.stringify(ingredients);
-    }
-
-    function createIngredientElement(ingredient) {
-        const ingredientElement = document.createElement('div');
-        ingredientElement.className = 'badge badge-primary gap-1';
-        ingredientElement.innerHTML = `
-            <span>${ingredient}</span>
-            <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
-        `;
-        ingredientElement.querySelector('button').addEventListener('click', () => {
-            ingredients = ingredients.filter(t => t !== ingredient);
-            ingredientElement.remove();
-            updateHiddenInput();
-            errorMessage.classList.add('hidden');
-        });
-        return ingredientElement;
-    }
-
-    ingredientInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && ingredientInput.value.trim()) {
-            e.preventDefault();
-            if (ingredients.length >= 5) {
-                errorMessage.classList.remove('hidden');
-                return;
-            }
-            const ingredient = ingredientInput.value.trim();
-            if (!ingredients.includes(ingredient)) {
-                ingredients.push(ingredient);
-                ingredientContainer.insertBefore(createIngredientElement(ingredient), ingredientInput);
-                updateHiddenInput();
-            }
-            ingredientInput.value = '';
-            errorMessage.classList.add('hidden');
-        }
-    });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to remove from favorites', 'error');
+      })
+      .finally(() => {
+        modal.close();
+        modal.remove();
+      });
+    };
   });
 </script>
 {% endblock %}

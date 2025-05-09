@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.urls import reverse
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.contrib import messages
 from datetime import datetime, date, timedelta
@@ -55,11 +55,16 @@ def diary_list(request):
         timezone=user_tz
     )
     
+    # Convert to UTC for database query
+    utc = zoneinfo.ZoneInfo('UTC')
+    start_datetime_utc = start_datetime_local.astimezone(utc)
+    end_datetime_utc = end_datetime_local.astimezone(utc)
+    
     # Get entries for the selected date
     diary_entries = Diary.objects.select_related('user').prefetch_related('ingredients').filter(
         user=request.user,
-        recorded_at__gte=start_datetime_local,
-        recorded_at__lte=end_datetime_local
+        recorded_at__gte=start_datetime_utc,
+        recorded_at__lte=end_datetime_utc
     ).order_by('-recorded_at', '-created_at')  # Sort by recorded_at first, then created_at as a tiebreaker
     
     # Paginate the entries
@@ -161,6 +166,12 @@ def diary_update(request, pk):
     if not original_date:
         original_date = timezone.localtime(diary_entry.recorded_at, timezone=user_tz).date().strftime('%Y-%m-%d')
     
+    # Handle favorite toggle action
+    if request.method == 'POST' and request.POST.get('action') == 'toggle_favorite':
+        diary_entry.favorite = request.POST.get('favorite') == 'true'
+        diary_entry.save(update_fields=['favorite'])
+        return JsonResponse({'status': 'success'})
+    
     if request.method == 'POST':
         form = DiaryForm(request.user, request.POST, instance=diary_entry)
         
@@ -216,4 +227,28 @@ def diary_delete(request, pk):
     return render(request, 'diary/diary_confirm_delete.html', {
         'diary_entry': diary_entry,
         'original_date': original_date
-    }) 
+    })
+
+@login_required
+def favorites(request):
+    """Return a list of favorite diary entries."""
+    favorites = Diary.objects.select_related('user').prefetch_related('ingredients').filter(
+        user=request.user,
+        favorite=True
+    ).order_by('-recorded_at')
+    
+    favorite_data = []
+    for entry in favorites:
+        # Get ingredients as a list of names
+        ingredients = list(entry.ingredients.values_list('name', flat=True))
+        
+        favorite_data.append({
+            'id': entry.id,
+            'title': entry.title,
+            'content': entry.content,
+            'category': entry.category,
+            'ingredients': json.dumps(ingredients) if ingredients else None,
+            'recorded_at': entry.recorded_at.isoformat()
+        })
+    
+    return JsonResponse(favorite_data, safe=False) 
