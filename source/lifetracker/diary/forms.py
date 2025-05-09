@@ -1,12 +1,28 @@
 from django import forms
 from django.utils import timezone
 from datetime import date, datetime
+import json
 import zoneinfo
+import logging
 
 from .models import Diary, Ingredient
 
+logger = logging.getLogger(__name__)
+
 class DiaryForm(forms.ModelForm):
     """Form for creating and editing diary entries."""
+    
+    CATEGORY_CHOICES = [
+        ('eat', 'Eat'),
+        ('drink', 'Drink'),
+        ('exercise', 'Exercise'),
+    ]
+    
+    category = forms.ChoiceField(
+        choices=CATEGORY_CHOICES,
+        widget=forms.HiddenInput(),  # Hidden because we'll use tabs instead
+        initial='eat'  # Default to 'eat'
+    )
     
     recorded_at = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={
@@ -49,7 +65,7 @@ class DiaryForm(forms.ModelForm):
     
     class Meta:
         model = Diary
-        fields = ["recorded_at", "title", "content", "favorite"]
+        fields = ["category", "recorded_at", "title", "content", "favorite", "ingredients_input"]
     
     def __init__(self, user=None, *args, **kwargs):
         """Initialize the form with the user to set the default date and time."""
@@ -76,70 +92,53 @@ class DiaryForm(forms.ModelForm):
             self.fields['recorded_at'].initial = local_now
             self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
             self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
-            
-        # For existing entries
-        elif kwargs.get('instance'):
-            instance = kwargs.get('instance')
-            if instance:
-                if instance.recorded_at:
-                    # Convert stored UTC time to user's timezone
-                    local_time = timezone.localtime(instance.recorded_at, timezone=user_tz)
-                    
-                    # Format for datetime-local input
-                    formatted_datetime = local_time.strftime('%Y-%m-%dT%H:%M')
-                    
-                    # Set both initial and widget value
-                    self.fields['recorded_at'].initial = local_time
-                    self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
-                    self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
-                
-                # Set initial ingredients
-                if instance.ingredients.exists():
-                    self.fields['ingredients_input'].initial = ','.join(
-                        instance.ingredients.values_list('name', flat=True)
-                    )
-    
-    def clean_recorded_at(self):
-        """Clean the recorded_at field to ensure proper timezone handling."""
-        recorded_at = self.cleaned_data.get('recorded_at')
-        
-        if not recorded_at or not self.user:
-            return recorded_at
-            
-        # Get user's timezone from their profile
-        user_tz = zoneinfo.ZoneInfo(self.user.timezone)
-        
-        # The datetime from the form will be naive - make it timezone aware
-        if timezone.is_naive(recorded_at):
-            # Interpret the naive datetime as being in the user's timezone
-            recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
-        
-        # Convert to UTC for storage
-        return recorded_at.astimezone(timezone.utc)
+        else:
+            # For existing entries, set the ingredients_input value
+            instance = kwargs['instance']
+            if instance.ingredients.exists():
+                # Prefetch ingredients to avoid multiple queries
+                ingredients = list(instance.ingredients.values_list('name', flat=True))
+                logger.debug(f"Initializing form with existing ingredients: {ingredients}")
+                self.fields['ingredients_input'].initial = json.dumps(ingredients)
+            else:
+                logger.debug("No existing ingredients found for this entry")
+                self.fields['ingredients_input'].initial = '[]'
 
     def save(self, commit=True):
         """Save the diary entry and handle ingredients."""
         instance = super().save(commit=False)
         
-        if self.user:
+        # Set the user before saving
+        if self.user and not instance.user_id:
             instance.user = self.user
         
-        if commit:
-            instance.save()
-            
-            # Handle ingredients
-            ingredients_input = self.cleaned_data.get('ingredients_input', '').strip()
-            if ingredients_input:
-                # Clear existing ingredients
-                instance.ingredients.clear()
-                
-                # Add new ingredients
-                ingredient_names = [name.strip() for name in ingredients_input.split(',') if name.strip()]
-                for ingredient_name in ingredient_names:
+        # Save the instance first
+        instance.save()
+        
+        # Handle ingredients
+        ingredients_data = self.cleaned_data.get('ingredients_input', '[]')
+        try:
+            ingredient_names = json.loads(ingredients_data)
+        except json.JSONDecodeError:
+            ingredient_names = []
+        
+        # Clear existing ingredients if any
+        instance.ingredients.clear()
+        
+        # Create or get ingredients and add them to the entry
+        for name in ingredient_names:
+            if name.strip():  # Only process non-empty names
+                try:
                     ingredient, _ = Ingredient.objects.get_or_create(
                         user=self.user,
-                        name=ingredient_name
+                        name=name.strip()
                     )
                     instance.ingredients.add(ingredient)
-            
+                except Exception:
+                    pass  # Skip any problematic ingredients
+        
+        # Call save_m2m() from parent form to handle other m2m relationships
+        if hasattr(self, 'save_m2m'):
+            self.save_m2m()
+        
         return instance 

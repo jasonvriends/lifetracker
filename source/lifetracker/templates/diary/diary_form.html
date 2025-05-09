@@ -23,11 +23,19 @@
   <!-- Form Card -->
   <div class="card bg-base-100 shadow-lg">
     <div class="card-body">
+      <!-- Category Tabs -->
+      <div class="flex justify-center gap-2 mb-6">
+        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="eat">Food</button>
+        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="drink">Drink</button>
+        <button type="button" class="btn btn-lg flex-1 max-w-48" data-category="exercise">Exercise</button>
+      </div>
+
       <form method="post" novalidate>
         {% csrf_token %}
         {% if original_date %}
         <input type="hidden" name="date" value="{{ original_date }}">
         {% endif %}
+        {{ form.category }}
         {{ form.ingredients_input }}
         
         {% if form.non_field_errors %}
@@ -59,7 +67,7 @@
         <!-- Title Field -->
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">{{ form.title.label }}</span>
+            <span class="label-text name-label">{{ form.title.label }}</span>
           </label>
           {{ form.title }}
           {% if form.title.errors %}
@@ -72,7 +80,7 @@
         <!-- Content Field -->
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">{{ form.content.label }}</span>
+            <span class="label-text notes-label">{{ form.content.label }}</span>
           </label>
           {{ form.content }}
           {% if form.content.errors %}
@@ -82,14 +90,14 @@
           {% endif %}
         </div>
 
-        <!-- Tags Field -->
-        <div class="form-control w-full mt-4">
+        <!-- Ingredients Field -->
+        <div class="form-control w-full mt-4 ingredients-section">
           <label class="label">
-            <span class="label-text">Ingredients</span>
-            <span class="label-text-alt">Press Enter to add an ingredient (max 5)</span>
+            <span class="label-text ingredients-label">Ingredients</span>
+            <span class="label-text-alt ingredients-help">Press Enter to add (max 5)</span>
           </label>
           <div class="flex flex-wrap gap-2 p-2 border rounded-lg bg-base-100" id="ingredient-container">
-            <input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="Type an ingredient and press Enter">
+            <input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="">
           </div>
           <div id="error-message" class="text-error text-sm mt-1 hidden">Maximum 5 ingredients allowed!</div>
         </div>
@@ -125,8 +133,72 @@
 
 {% block extra_js %}
 <script>
-  // Ensure the datetime-local input shows the correct timezone
   document.addEventListener('DOMContentLoaded', function() {
+    // Tab handling
+    const tabs = document.querySelectorAll('[data-category]');
+    const categoryInput = document.getElementById('id_category');
+    const ingredientsSection = document.querySelector('.ingredients-section');
+    const ingredientsLabel = document.querySelector('.ingredients-label');
+    const ingredientsHelp = document.querySelector('.ingredients-help');
+    const nameLabel = document.querySelector('.name-label');
+    const notesLabel = document.querySelector('.notes-label');
+    const ingredientInput = document.getElementById('ingredient-input');
+    
+    // Set initial active tab based on form value or default to 'eat'
+    const initialCategory = categoryInput.value || 'eat';
+    const initialTab = document.querySelector(`[data-category="${initialCategory}"]`);
+    if (initialTab) {
+      initialTab.classList.add('btn-primary');
+    }
+    updateFormForCategory(initialCategory);
+    
+    // Tab click handlers
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        tabs.forEach(t => t.classList.remove('btn-primary'));
+        // Add active class to clicked tab
+        tab.classList.add('btn-primary');
+        // Update hidden category input
+        const category = tab.getAttribute('data-category');
+        categoryInput.value = category;
+        // Update form for selected category
+        updateFormForCategory(category);
+      });
+    });
+    
+    function updateFormForCategory(category) {
+      // Update field labels based on category
+      switch(category) {
+        case 'eat':
+          nameLabel.textContent = 'What did you eat?';
+          notesLabel.textContent = 'Additional Details';
+          ingredientsLabel.textContent = 'Ingredients';
+          ingredientsHelp.textContent = 'Press Enter to add ingredients (max 5)';
+          ingredientInput.placeholder = 'Type an ingredient and press Enter';
+          ingredientsSection.style.display = 'block';
+          break;
+        case 'drink':
+          nameLabel.textContent = 'What did you drink?';
+          notesLabel.textContent = 'Additional Details';
+          ingredientsLabel.textContent = 'Ingredients';
+          ingredientsHelp.textContent = 'Press Enter to add ingredients (max 5)';
+          ingredientInput.placeholder = 'Type an ingredient and press Enter';
+          ingredientsSection.style.display = 'block';
+          break;
+        case 'exercise':
+          nameLabel.textContent = 'Type of Exercise';
+          notesLabel.textContent = 'Exercise Details';
+          ingredientsSection.style.display = 'none';
+          // Clear ingredients when switching to exercise
+          document.getElementById('id_ingredients_input').value = JSON.stringify([]);
+          document.getElementById('ingredient-container').innerHTML = 
+            '<input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="Type an ingredient and press Enter">';
+          break;
+      }
+    }
+
+    // Datetime handling
     const datetimeInput = document.querySelector('input[type="datetime-local"]');
     if (datetimeInput && !datetimeInput.value) {
       const now = new Date();
@@ -147,57 +219,63 @@
     });
 
     // Ingredient input handling
-    const ingredientInput = document.getElementById('ingredient-input');
     const ingredientContainer = document.getElementById('ingredient-container');
     const errorMessage = document.getElementById('error-message');
     const ingredientsHidden = document.getElementById('id_ingredients_input');
-    let ingredients = ingredientsHidden.value ? ingredientsHidden.value.split(',') : [];
-
-    // Initialize existing ingredients
-    if (ingredients.length > 0) {
-      ingredients.forEach(ingredient => {
-        if (ingredient.trim()) {
-          ingredientContainer.insertBefore(createIngredientElement(ingredient.trim()), ingredientInput);
+    let ingredients = [];
+    
+    // Initialize existing ingredients from JSON
+    try {
+        const existingValue = ingredientsHidden.value;
+        if (existingValue) {
+            ingredients = JSON.parse(existingValue);
+            ingredients.forEach(ingredient => {
+                if (ingredient.trim()) {
+                    ingredientContainer.insertBefore(createIngredientElement(ingredient.trim()), ingredientInput);
+                }
+            });
         }
-      });
+    } catch (e) {
+        console.error('Error parsing ingredients:', e);
+        ingredients = [];
     }
 
     function updateHiddenInput() {
-      ingredientsHidden.value = ingredients.join(',');
+        ingredientsHidden.value = JSON.stringify(ingredients);
     }
 
     function createIngredientElement(ingredient) {
-      const ingredientElement = document.createElement('div');
-      ingredientElement.className = 'badge badge-primary gap-1';
-      ingredientElement.innerHTML = `
-        <span>${ingredient}</span>
-        <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
-      `;
-      ingredientElement.querySelector('button').addEventListener('click', () => {
-        ingredients = ingredients.filter(t => t !== ingredient);
-        ingredientElement.remove();
-        updateHiddenInput();
-        errorMessage.classList.add('hidden');
-      });
-      return ingredientElement;
+        const ingredientElement = document.createElement('div');
+        ingredientElement.className = 'badge badge-primary gap-1';
+        ingredientElement.innerHTML = `
+            <span>${ingredient}</span>
+            <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
+        `;
+        ingredientElement.querySelector('button').addEventListener('click', () => {
+            ingredients = ingredients.filter(t => t !== ingredient);
+            ingredientElement.remove();
+            updateHiddenInput();
+            errorMessage.classList.add('hidden');
+        });
+        return ingredientElement;
     }
 
     ingredientInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && ingredientInput.value.trim()) {
-        e.preventDefault();
-        if (ingredients.length >= 5) {
-          errorMessage.classList.remove('hidden');
-          return;
+        if (e.key === 'Enter' && ingredientInput.value.trim()) {
+            e.preventDefault();
+            if (ingredients.length >= 5) {
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            const ingredient = ingredientInput.value.trim();
+            if (!ingredients.includes(ingredient)) {
+                ingredients.push(ingredient);
+                ingredientContainer.insertBefore(createIngredientElement(ingredient), ingredientInput);
+                updateHiddenInput();
+            }
+            ingredientInput.value = '';
+            errorMessage.classList.add('hidden');
         }
-        const ingredient = ingredientInput.value.trim();
-        if (!ingredients.includes(ingredient)) {
-          ingredients.push(ingredient);
-          ingredientContainer.insertBefore(createIngredientElement(ingredient), ingredientInput);
-          updateHiddenInput();
-        }
-        ingredientInput.value = '';
-        errorMessage.classList.add('hidden');
-      }
     });
   });
 </script>

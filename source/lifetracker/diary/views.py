@@ -6,10 +6,14 @@ from django.http import Http404
 from django.core.paginator import Paginator
 from django.contrib import messages
 from datetime import datetime, date, timedelta
+import json
 import zoneinfo
+import logging
 
-from .models import Diary
+from .models import Diary, Ingredient
 from .forms import DiaryForm
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def diary_list(request):
@@ -52,11 +56,11 @@ def diary_list(request):
     )
     
     # Get entries for the selected date
-    diary_entries = Diary.objects.filter(
+    diary_entries = Diary.objects.select_related('user').prefetch_related('ingredients').filter(
         user=request.user,
         recorded_at__gte=start_datetime_local,
         recorded_at__lte=end_datetime_local
-    ).order_by('-recorded_at')
+    ).order_by('-recorded_at', '-created_at')  # Sort by recorded_at first, then created_at as a tiebreaker
     
     # Paginate the entries
     paginator = Paginator(diary_entries, 10)  # Show 10 entries per page
@@ -92,22 +96,30 @@ def diary_create(request):
         form = DiaryForm(request.user, request.POST)
         
         if form.is_valid():
+            # Log ingredients data for debugging
+            logger.debug(f"Ingredients input data: {form.cleaned_data.get('ingredients_input')}")
+            
             # Get the cleaned recorded_at value, which should already be timezone-aware in UTC
             recorded_at = form.cleaned_data.get('recorded_at')
             
-            # Create diary entry but don't save yet
-            diary_entry = form.save(commit=False)
-            diary_entry.user = request.user
-            diary_entry.recorded_at = recorded_at  # Already in UTC from form cleaning
-            
-            # Save the entry
-            diary_entry.save()
-            
-            messages.success(request, "Diary entry created successfully.")
-            
-            # Redirect back to the original date the user was viewing
-            redirect_date = original_date if original_date else timezone.localtime(recorded_at, timezone=user_tz).date().strftime('%Y-%m-%d')
-            return redirect(f"{reverse('diary:list')}?date={redirect_date}")
+            try:
+                # Create diary entry and save it
+                diary_entry = form.save()
+                
+                # Log saved ingredients for debugging
+                logger.debug(f"Saved ingredients: {list(diary_entry.ingredients.values_list('name', flat=True))}")
+                
+                messages.success(request, "Diary entry created successfully.")
+                
+                # Redirect back to the original date the user was viewing
+                redirect_date = original_date if original_date else timezone.localtime(recorded_at, timezone=user_tz).date().strftime('%Y-%m-%d')
+                return redirect(f"{reverse('diary:list')}?date={redirect_date}")
+            except Exception as e:
+                logger.error(f"Error saving diary entry: {str(e)}")
+                messages.error(request, "Error saving diary entry. Please try again.")
+        else:
+            # Log form errors for debugging
+            logger.debug(f"Form errors: {form.errors}")
     else:
         # Pre-fill date if it's passed in query string
         initial = {}
@@ -153,28 +165,25 @@ def diary_update(request, pk):
         form = DiaryForm(request.user, request.POST, instance=diary_entry)
         
         if form.is_valid():
+            # Log ingredients data for debugging
+            logger.debug(f"Ingredients input data: {form.cleaned_data.get('ingredients_input')}")
+            
             # Get the cleaned recorded_at value, which should already be timezone-aware
             recorded_at = form.cleaned_data.get('recorded_at')
             
-            # Ensure we're using the user's timezone consistently
-            user_tz = zoneinfo.ZoneInfo(request.user.timezone)
+            # Update and save the entry
+            updated_entry = form.save()
             
-            # Create diary entry but don't save yet
-            updated_entry = form.save(commit=False)
-            
-            # Make sure recorded_at is timezone aware in the user's timezone
-            if recorded_at and not timezone.is_aware(recorded_at):
-                updated_entry.recorded_at = timezone.make_aware(recorded_at, timezone=user_tz)
-            else:
-                updated_entry.recorded_at = recorded_at
-                
-            # Save the entry
-            updated_entry.save()
+            # Log saved ingredients for debugging
+            logger.debug(f"Saved ingredients: {list(updated_entry.ingredients.values_list('name', flat=True))}")
             
             messages.success(request, "Diary entry updated successfully.")
             
             # Redirect back to the original date the user was viewing
             return redirect(f"{reverse('diary:list')}?date={original_date}")
+        else:
+            # Log form errors for debugging
+            logger.debug(f"Form errors: {form.errors}")
     else:
         form = DiaryForm(request.user, instance=diary_entry)
     

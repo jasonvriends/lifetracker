@@ -28,10 +28,21 @@ class Ingredient(models.Model):
 class Diary(models.Model):
     """Diary entry model for recording daily journal entries."""
     
+    CATEGORY_CHOICES = [
+        ('eat', 'Eat'),
+        ('drink', 'Drink'),
+        ('exercise', 'Exercise'),
+    ]
+    
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="diary_entries"
+    )
+    category = models.CharField(
+        max_length=10,
+        choices=CATEGORY_CHOICES,
+        default='eat'
     )
     title = models.CharField(max_length=255)
     content = models.TextField(blank=True)  # Make content optional
@@ -54,7 +65,7 @@ class Diary(models.Model):
     
     def __str__(self):
         """String representation of the diary entry."""
-        return f"{self.user.name}'s entry on {self.recorded_at}"
+        return f"{self.user.name}'s {self.get_category_display()} entry on {self.recorded_at}"
     
     @property
     def entry_date(self):

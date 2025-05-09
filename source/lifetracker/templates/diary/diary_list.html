@@ -50,71 +50,135 @@
   </div>
 
   <!-- Entries -->
-  <div class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% if page_obj %}
       {% for entry in page_obj %}
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <div class="flex justify-between items-start">
-              <h2 class="card-title">{{ entry.title }}</h2>
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border border-base-200">
+          <div class="card-body p-6">
+            <!-- Category Badge and Title -->
+            <div class="flex justify-between items-start gap-4 mb-4">
+              <div class="flex items-center gap-2">
+                {% if entry.category == 'eat' %}
+                  <div class="badge badge-primary badge-lg gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13h18M3 6h18M3 20h18" />
+                    </svg>
+                    Eat
+                  </div>
+                {% elif entry.category == 'drink' %}
+                  <div class="badge badge-secondary badge-lg gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Drink
+                  </div>
+                {% else %}
+                  <div class="badge badge-accent badge-lg gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Exercise
+                  </div>
+                {% endif %}
+                {% if entry.favorite %}
+                  <div class="text-warning transform hover:scale-110 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </div>
+                {% endif %}
+              </div>
               <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle hover:bg-base-200">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
                   </svg>
                 </div>
-                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                  <li><a href="{% url 'diary:update' entry.pk %}">Edit</a></li>
-                  <li><a href="{% url 'diary:delete' entry.pk %}" class="text-error">Delete</a></li>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-52">
+                  <li><a href="{% url 'diary:update' entry.pk %}" class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </a></li>
+                  <li><a href="{% url 'diary:delete' entry.pk %}" class="text-error flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </a></li>
                 </ul>
               </div>
             </div>
-            <div class="flex flex-col md:flex-row md:gap-4 text-sm text-base-content/70">
-              <p>Recorded: {{ entry.recorded_at|date:"F j, Y g:i A" }}</p>
-              <p>Created: {{ entry.created_at|date:"F j, Y g:i A" }}</p>
-            </div>
-            <div class="divider"></div>
-            <div class="prose">
-              {{ entry.content|linebreaks }}
+
+            <!-- Title -->
+            <h2 class="card-title text-lg font-bold mb-3">{{ entry.title }}</h2>
+
+            <!-- Ingredients -->
+            {% if entry.ingredients.all %}
+              <div class="flex flex-wrap gap-2 mt-2">
+                {% for ingredient in entry.ingredients.all %}
+                  <span class="badge badge-outline badge-sm px-3 py-3 bg-base-100">{{ ingredient.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Content -->
+            {% if entry.content %}
+              <div class="mt-4 text-sm text-base-content/80 prose max-w-none">
+                {{ entry.content|linebreaks }}
+              </div>
+            {% endif %}
+
+            <!-- Timestamp -->
+            <div class="mt-4 pt-2 text-sm text-base-content/60 border-t border-base-200">
+              {{ entry.recorded_at|date:"g:i A" }}
             </div>
           </div>
         </div>
       {% endfor %}
-      
-      <!-- Pagination -->
-      {% if page_obj.paginator.num_pages > 1 %}
-        <div class="join flex justify-center mt-8">
-          {% if page_obj.has_previous %}
-            <a href="?date={{ formatted_date }}&page={{ page_obj.previous_page_number }}" class="join-item btn">«</a>
-          {% else %}
-            <button class="join-item btn btn-disabled">«</button>
-          {% endif %}
-          
-          {% for i in page_obj.paginator.page_range %}
-            {% if page_obj.number == i %}
-              <button class="join-item btn btn-active">{{ i }}</button>
-            {% else %}
-              <a href="?date={{ formatted_date }}&page={{ i }}" class="join-item btn">{{ i }}</a>
-            {% endif %}
-          {% endfor %}
-          
-          {% if page_obj.has_next %}
-            <a href="?date={{ formatted_date }}&page={{ page_obj.next_page_number }}" class="join-item btn">»</a>
-          {% else %}
-            <button class="join-item btn btn-disabled">»</button>
-          {% endif %}
-        </div>
-      {% endif %}
     {% else %}
-      <div class="card bg-base-100 shadow-lg">
-        <div class="card-body text-center p-12">
-          <h3 class="text-xl font-semibold mb-4">No entries for this date</h3>
-          <p class="mb-6">You haven't created any diary entries for {{ selected_date|date:"F j, Y" }}.</p>
-          <a href="{% url 'diary:create' %}?date={{ formatted_date }}" class="btn btn-primary">Create New Entry</a>
+      <div class="col-span-full">
+        <div class="card bg-base-100 shadow-xl border border-base-200">
+          <div class="card-body text-center p-12">
+            <div class="mb-6 text-base-content/60">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-4">No entries for this date</h3>
+            <p class="mb-6 text-base-content/70">You haven't created any diary entries for {{ selected_date|date:"F j, Y" }}.</p>
+            <a href="{% url 'diary:create' %}?date={{ formatted_date }}" class="btn btn-primary btn-wide">Create New Entry</a>
+          </div>
         </div>
       </div>
     {% endif %}
   </div>
+
+  <!-- Pagination -->
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="join flex justify-center mt-8 shadow-lg">
+      {% if page_obj.has_previous %}
+        <a href="?date={{ formatted_date }}&page={{ page_obj.previous_page_number }}" class="join-item btn">«</a>
+      {% else %}
+        <button class="join-item btn btn-disabled">«</button>
+      {% endif %}
+      
+      {% for i in page_obj.paginator.page_range %}
+        {% if page_obj.number == i %}
+          <button class="join-item btn btn-active">{{ i }}</button>
+        {% else %}
+          <a href="?date={{ formatted_date }}&page={{ i }}" class="join-item btn">{{ i }}</a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+        <a href="?date={{ formatted_date }}&page={{ page_obj.next_page_number }}" class="join-item btn">»</a>
+      {% else %}
+        <button class="join-item btn btn-disabled">»</button>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>
 
 <script>
