@@ -28,7 +28,8 @@ class DiaryForm(forms.ModelForm):
         widget=forms.DateTimeInput(attrs={
             'type': 'datetime-local', 
             'class': 'input input-bordered w-full',
-            'step': '60'  # 1 minute step
+            'step': '60',  # 1 minute step
+            'placeholder': 'Select date and time'
         }),
         label="Date and Time",
         help_text="Select the date and time for this entry (in your timezone)",
@@ -70,39 +71,70 @@ class DiaryForm(forms.ModelForm):
     def __init__(self, user=None, *args, **kwargs):
         """Initialize the form with the user to set the default date and time."""
         self.user = user
+        
+        # Get user's timezone with fallback to UTC
+        try:
+            self.user_tz = zoneinfo.ZoneInfo(user.timezone if user else 'UTC')
+            if user:
+                logger.debug(f"Using timezone {self.user_tz} for user {user.id}")
+        except zoneinfo.ZoneInfoNotFoundError:
+            logger.warning(f"Invalid timezone {user.timezone if user else 'None'} for user {user.id if user else 'None'}, falling back to UTC")
+            self.user_tz = zoneinfo.ZoneInfo('UTC')
+        
+        # Ensure we have initial data
+        if 'initial' not in kwargs:
+            kwargs['initial'] = {}
+            
+        # For new entries without a recorded_at value, set to current time
+        if not kwargs.get('instance') and 'recorded_at' not in kwargs['initial']:
+            current_time = timezone.now()
+            local_time = timezone.localtime(current_time, self.user_tz)
+            kwargs['initial']['recorded_at'] = local_time
+            logger.debug(f"Setting initial recorded_at to current time: {local_time}")
+        
         super().__init__(*args, **kwargs)
         
         if not user:
+            logger.warning("No user provided for DiaryForm initialization")
             return
-            
-        # Get user's timezone from their profile
-        user_tz = zoneinfo.ZoneInfo(user.timezone)
         
-        # If it's a new entry (not editing)
-        if not kwargs.get('instance'):
-            # Get current time in UTC
-            utc_now = timezone.now()
-            # Convert to user's timezone
-            local_now = timezone.localtime(utc_now, timezone=user_tz)
+        # For existing entries, ensure recorded_at is in local time
+        if self.instance and self.instance.pk and self.instance.recorded_at:
+            # Get the UTC time from the instance
+            utc_time = self.instance.recorded_at
+            # Convert to local time
+            local_time = timezone.localtime(utc_time, self.user_tz)
+            # Set both initial and current value
+            self.initial['recorded_at'] = local_time
+            self.fields['recorded_at'].widget.attrs['value'] = local_time.strftime('%Y-%m-%dT%H:%M')
+            logger.debug(f"Setting initial recorded_at from instance: {local_time}")
             
-            # Format for datetime-local input (HTML5 standard)
-            formatted_datetime = local_now.strftime('%Y-%m-%dT%H:%M')
-            
-            # Set both initial and widget value
-            self.fields['recorded_at'].initial = local_now
-            self.fields['recorded_at'].widget.format = '%Y-%m-%dT%H:%M'
-            self.fields['recorded_at'].widget.attrs['value'] = formatted_datetime
-        else:
-            # For existing entries, set the ingredients_input value
-            instance = kwargs['instance']
-            if instance.ingredients.exists():
-                # Prefetch ingredients to avoid multiple queries
-                ingredients = list(instance.ingredients.values_list('name', flat=True))
-                logger.debug(f"Initializing form with existing ingredients: {ingredients}")
-                self.fields['ingredients_input'].initial = json.dumps(ingredients)
+        # Handle ingredients
+        if self.instance and self.instance.pk and self.instance.ingredients.exists():
+            ingredients = list(self.instance.ingredients.values_list('name', flat=True))
+            self.initial['ingredients_input'] = json.dumps(ingredients)
+            logger.debug(f"Setting initial ingredients: {ingredients}")
+
+    def clean_recorded_at(self):
+        """Convert the local datetime to UTC for storage."""
+        recorded_at = self.cleaned_data.get('recorded_at')
+        if recorded_at:
+            # Always treat the input as being in the user's timezone
+            if timezone.is_naive(recorded_at):
+                # Make the datetime aware in the user's timezone
+                recorded_at = timezone.make_aware(recorded_at, self.user_tz)
+                logger.debug(f"Made naive recorded_at aware in user timezone: {recorded_at}")
             else:
-                logger.debug("No existing ingredients found for this entry")
-                self.fields['ingredients_input'].initial = '[]'
+                # If it's already aware, ensure it's in the user's timezone
+                recorded_at = recorded_at.astimezone(self.user_tz)
+                logger.debug(f"Converted aware recorded_at to user timezone: {recorded_at}")
+            
+            # Convert to UTC for storage using zoneinfo
+            utc_tz = zoneinfo.ZoneInfo('UTC')
+            utc_recorded_at = recorded_at.astimezone(utc_tz)
+            logger.debug(f"Converted recorded_at to UTC: {utc_recorded_at}")
+            return utc_recorded_at
+        return recorded_at
 
     def save(self, commit=True):
         """Save the diary entry and handle ingredients."""

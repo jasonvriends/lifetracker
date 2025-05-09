@@ -1,0 +1,268 @@
+{% extends "layouts/app.html" %}
+{% load static i18n %}
+{% load tz %}
+
+{% block head_title %}Edit Diary Entry{% endblock head_title %}
+
+{% block content %}
+<!-- Debug info -->
+{% now "Y-m-d H:i T" as current_time %}
+<!-- Current time: {{ current_time }} -->
+<!-- User timezone: {{ request.user.timezone }} -->
+<!-- Form recorded_at value: {{ form.recorded_at.value|date:"Y-m-d H:i T" }} -->
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Edit Diary Entry</h1>
+    <a href="{% url 'diary:list' %}{% if original_date %}?date={{ original_date }}{% elif form.recorded_at.value %}?date={{ form.recorded_at.value|date:'Y-m-d' }}{% endif %}" class="btn btn-ghost">
+      Back to Diary
+    </a>
+  </div>
+
+  <!-- Form Card -->
+  <div class="card bg-base-100 shadow-lg">
+    <div class="card-body">
+      <!-- Category Tabs -->
+      <div role="tablist" class="tabs tabs-boxed justify-center mb-6">
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="eat">Food</a>
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="drink">Drink</a>
+        <a role="tab" class="tab tab-lg flex-1 max-w-48" data-category="exercise">Exercise</a>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if original_date %}
+        <input type="hidden" name="date" value="{{ original_date }}">
+        {% endif %}
+        {{ form.category }}
+        {{ form.ingredients_input }}
+        
+        {% if form.non_field_errors %}
+          <div class="alert alert-error">
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <!-- Date and Time Field -->
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">{{ form.recorded_at.label }}</span>
+            {% if form.recorded_at.help_text %}
+              <span class="label-text-alt">{{ form.recorded_at.help_text }}</span>
+            {% endif %}
+          </label>
+          <input
+            type="datetime-local"
+            name="{{ form.recorded_at.name }}"
+            id="{{ form.recorded_at.id_for_label }}"
+            class="input input-bordered w-full"
+            step="60"
+            value="{{ form.recorded_at.value|date:'Y-m-d\TH:i' }}"
+            required
+            aria-describedby="{{ form.recorded_at.id_for_label }}_helptext"
+          >
+          {% if form.recorded_at.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.recorded_at.errors.0 }}</span>
+            </label>
+          {% endif %}
+        </div>
+        
+        <!-- Title Field -->
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text name-label">{{ form.title.label }}</span>
+          </label>
+          {{ form.title }}
+          {% if form.title.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.title.errors.0 }}</span>
+            </label>
+          {% endif %}
+        </div>
+        
+        <!-- Content Field -->
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text notes-label">{{ form.content.label }}</span>
+          </label>
+          {{ form.content }}
+          {% if form.content.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.content.errors.0 }}</span>
+            </label>
+          {% endif %}
+        </div>
+
+        <!-- Ingredients Field -->
+        <div class="form-control w-full mt-4 ingredients-section">
+          <label class="label">
+            <span class="label-text ingredients-label">Ingredients</span>
+            <span class="label-text-alt ingredients-help">Press Enter to add (max 5)</span>
+          </label>
+          <div class="flex flex-wrap gap-2 p-2 border rounded-lg bg-base-100" id="ingredient-container">
+            <input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="">
+          </div>
+          <div id="error-message" class="text-error text-sm mt-1 hidden">Maximum 5 ingredients allowed!</div>
+        </div>
+
+        <!-- Favorite Toggle -->
+        <div class="form-control w-full mt-4">
+          <label class="label cursor-pointer justify-start gap-4">
+            <span class="label-text">{{ form.favorite.label }}</span>
+            {{ form.favorite }}
+          </label>
+          {% if form.favorite.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.favorite.errors.0 }}</span>
+            </label>
+          {% endif %}
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-2 mt-6">
+          <a href="{% url 'diary:list' %}{% if original_date %}?date={{ original_date }}{% elif form.recorded_at.value %}?date={{ form.recorded_at.value|date:'Y-m-d' }}{% endif %}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tab handling
+    const tabs = document.querySelectorAll('[data-category]');
+    const categoryInput = document.getElementById('id_category');
+    const ingredientsSection = document.querySelector('.ingredients-section');
+    const ingredientsLabel = document.querySelector('.ingredients-label');
+    const ingredientsHelp = document.querySelector('.ingredients-help');
+    const nameLabel = document.querySelector('.name-label');
+    const notesLabel = document.querySelector('.notes-label');
+    const ingredientInput = document.getElementById('ingredient-input');
+    
+    // Set initial active tab based on form value
+    const initialCategory = categoryInput.value || 'eat';
+    const initialTab = document.querySelector(`[data-category="${initialCategory}"]`);
+    if (initialTab) {
+      initialTab.classList.add('tab-active');
+    }
+    updateFormForCategory(initialCategory);
+    
+    // Tab click handlers
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        tabs.forEach(t => t.classList.remove('tab-active'));
+        // Add active class to clicked tab
+        tab.classList.add('tab-active');
+        // Update hidden category input
+        const category = tab.getAttribute('data-category');
+        categoryInput.value = category;
+        updateFormForCategory(category);
+      });
+    });
+
+    function updateFormForCategory(category) {
+      // Update field labels based on category
+      switch(category) {
+        case 'eat':
+          nameLabel.textContent = 'What did you eat?';
+          notesLabel.textContent = 'Additional Details';
+          ingredientsLabel.textContent = 'Ingredients';
+          ingredientsHelp.textContent = 'Press Enter to add ingredients (max 5)';
+          ingredientInput.placeholder = 'Type an ingredient and press Enter';
+          ingredientsSection.style.display = 'block';
+          break;
+        case 'drink':
+          nameLabel.textContent = 'What did you drink?';
+          notesLabel.textContent = 'Additional Details';
+          ingredientsLabel.textContent = 'Ingredients';
+          ingredientsHelp.textContent = 'Press Enter to add ingredients (max 5)';
+          ingredientInput.placeholder = 'Type an ingredient and press Enter';
+          ingredientsSection.style.display = 'block';
+          break;
+        case 'exercise':
+          nameLabel.textContent = 'Type of Exercise';
+          notesLabel.textContent = 'Exercise Details';
+          ingredientsSection.style.display = 'none';
+          // Clear ingredients when switching to exercise
+          document.getElementById('id_ingredients_input').value = JSON.stringify([]);
+          document.getElementById('ingredient-container').innerHTML = 
+            '<input type="text" id="ingredient-input" class="input input-bordered input-sm w-full" placeholder="Type an ingredient and press Enter">';
+          break;
+      }
+    }
+
+    // Ingredient handling
+    function createIngredientElement(ingredient) {
+      const ingredientElement = document.createElement('div');
+      ingredientElement.className = 'badge badge-primary gap-1';
+      ingredientElement.innerHTML = `
+        <span>${ingredient}</span>
+        <button type="button" class="btn btn-xs btn-ghost btn-circle">✕</button>
+      `;
+      ingredientElement.querySelector('button').addEventListener('click', () => {
+        ingredients = ingredients.filter(t => t !== ingredient);
+        ingredientElement.remove();
+        updateHiddenInput();
+        errorMessage.classList.add('hidden');
+      });
+      return ingredientElement;
+    }
+
+    // Initialize ingredients handling
+    const errorMessage = document.getElementById('error-message');
+    let ingredients = [];
+    try {
+      const existingValue = document.getElementById('id_ingredients_input').value;
+      if (existingValue) {
+        ingredients = JSON.parse(existingValue);
+        ingredients.forEach(ingredient => {
+          if (ingredient.trim()) {
+            document.getElementById('ingredient-container').insertBefore(
+              createIngredientElement(ingredient.trim()),
+              document.getElementById('ingredient-input')
+            );
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error parsing ingredients:', e);
+      ingredients = [];
+    }
+
+    function updateHiddenInput() {
+      document.getElementById('id_ingredients_input').value = JSON.stringify(ingredients);
+    }
+
+    // Handle ingredient input
+    document.getElementById('ingredient-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        e.preventDefault();
+        if (ingredients.length >= 5) {
+          errorMessage.classList.remove('hidden');
+          return;
+        }
+        const ingredient = e.target.value.trim();
+        if (!ingredients.includes(ingredient)) {
+          ingredients.push(ingredient);
+          document.getElementById('ingredient-container').insertBefore(
+            createIngredientElement(ingredient),
+            e.target
+          );
+          updateHiddenInput();
+        }
+        e.target.value = '';
+        errorMessage.classList.add('hidden');
+      }
+    });
+  });
+</script>
+{% endblock %}
+{% endblock %} 

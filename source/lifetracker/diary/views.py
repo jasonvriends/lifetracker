@@ -133,6 +133,7 @@ def diary_create(request):
             try:
                 # Convert the date string to a datetime at the current time
                 selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                # Get current time in user's timezone
                 current_time = timezone.localtime(timezone.now(), timezone=user_tz).time()
                 
                 # Combine the selected date with current time in user's timezone
@@ -142,11 +143,15 @@ def diary_create(request):
                 )
                 initial['recorded_at'] = initial_datetime
             except ValueError:
-                pass
+                # If date parsing fails, use current time in user's timezone
+                initial['recorded_at'] = timezone.localtime(timezone.now(), timezone=user_tz)
+        else:
+            # No date provided, use current time in user's timezone
+            initial['recorded_at'] = timezone.localtime(timezone.now(), timezone=user_tz)
         
         form = DiaryForm(request.user, initial=initial)
     
-    return render(request, 'diary/diary_form.html', {
+    return render(request, 'diary/diary_create.html', {
         'form': form,
         'is_create': True,
         'original_date': original_date
@@ -198,7 +203,7 @@ def diary_update(request, pk):
     else:
         form = DiaryForm(request.user, instance=diary_entry)
     
-    return render(request, 'diary/diary_form.html', {
+    return render(request, 'diary/diary_edit.html', {
         'form': form,
         'diary_entry': diary_entry,
         'is_create': False,

@@ -2,7 +2,7 @@
 {% load static i18n %}
 {% load tz %}
 
-{% block head_title %}{% if is_create %}New Diary Entry{% else %}Edit Diary Entry{% endif %}{% endblock head_title %}
+{% block head_title %}New Diary Entry{% endblock head_title %}
 
 {% block content %}
 <!-- Debug info -->
@@ -14,13 +14,7 @@
 <div class="container mx-auto px-4 py-8">
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">
-      {% if is_create %}
-        New Diary Entry
-      {% else %}
-        Edit Diary Entry
-      {% endif %}
-    </h1>
+    <h1 class="text-2xl font-bold">New Diary Entry</h1>
     <a href="{% url 'diary:list' %}{% if original_date %}?date={{ original_date }}{% elif form.recorded_at.value %}?date={{ form.recorded_at.value|date:'Y-m-d' }}{% endif %}" class="btn btn-ghost">
       Back to Diary
     </a>
@@ -78,16 +72,18 @@
               <span class="label-text-alt">{{ form.recorded_at.help_text }}</span>
             {% endif %}
           </label>
+          {% timezone request.user.timezone %}
           <input
             type="datetime-local"
             name="{{ form.recorded_at.name }}"
             id="{{ form.recorded_at.id_for_label }}"
             class="input input-bordered w-full"
             step="60"
-            value="{{ form.recorded_at.value|date:'Y-m-d\TH:i' }}"
+            value="{{ form.initial.recorded_at|date:'Y-m-d\TH:i' }}"
             required
             aria-describedby="{{ form.recorded_at.id_for_label }}_helptext"
           >
+          {% endtimezone %}
           {% if form.recorded_at.errors %}
             <label class="label">
               <span class="label-text-alt text-error">{{ form.recorded_at.errors.0 }}</span>
@@ -149,13 +145,7 @@
         <!-- Form Actions -->
         <div class="flex justify-end gap-2 mt-6">
           <a href="{% url 'diary:list' %}{% if original_date %}?date={{ original_date }}{% elif form.recorded_at.value %}?date={{ form.recorded_at.value|date:'Y-m-d' }}{% endif %}" class="btn btn-ghost">Cancel</a>
-          <button type="submit" class="btn btn-primary">
-            {% if is_create %}
-              Create Entry
-            {% else %}
-              Save Changes
-            {% endif %}
-          </button>
+          <button type="submit" class="btn btn-primary">Create Entry</button>
         </div>
       </form>
     </div>
@@ -163,6 +153,7 @@
 </div>
 
 {% block extra_js %}
+{{ block.super }}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Tab handling
@@ -178,7 +169,7 @@
     const mainForm = document.querySelector('form');
     
     // Set initial active tab based on form value or default to 'favorites' for new entries
-    const isCreate = '{{ is_create }}' === 'True';
+    const isCreate = true;  // We know this is the create template
     const initialCategory = isCreate ? 'favorites' : (categoryInput.value || 'eat');
     const initialTab = document.querySelector(`[data-category="${initialCategory}"]`);
     if (initialTab) {
@@ -384,6 +375,63 @@
       showToast('Favorite selected! Update the time if needed and save to record.', 'success');
     };
 
+    // Function to remove from favorites
+    window.removeFavorite = function(id, buttonElement) {
+      // Show confirmation dialog using DaisyUI modal
+      const modal = document.createElement('dialog');
+      modal.className = 'modal modal-bottom sm:modal-middle';
+      modal.innerHTML = `
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Remove from Favorites</h3>
+          <p class="py-4">Are you sure you want to remove this item from your favorites?</p>
+          <div class="modal-action">
+            <button class="btn btn-ghost" onclick="this.closest('dialog').close()">Cancel</button>
+            <button class="btn btn-error" onclick="confirmRemoveFavorite(${id}, this.closest('dialog'))">Remove</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.showModal();
+    };
+
+    // Function to handle the actual removal
+    window.confirmRemoveFavorite = function(id, modal) {
+      fetch(`{% url 'diary:update' pk=0 %}`.replace('0', id), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new URLSearchParams({
+          'favorite': 'false',
+          'action': 'toggle_favorite'
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          // Remove the card from the view
+          const card = document.querySelector(`[data-favorite-id="${id}"]`);
+          if (card) {
+            card.remove();
+          }
+          // Show success toast
+          showToast('Removed from favorites', 'success');
+          // Reload favorites to update the view
+          loadFavorites();
+        } else {
+          throw new Error('Failed to remove from favorites');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to remove from favorites', 'error');
+      })
+      .finally(() => {
+        modal.close();
+        modal.remove();
+      });
+    };
+
     // Ingredient handling
     function createIngredientElement(ingredient) {
       const ingredientElement = document.createElement('div');
@@ -447,70 +495,7 @@
         errorMessage.classList.add('hidden');
       }
     });
-
-    // Function to remove from favorites
-    window.removeFavorite = function(id, buttonElement) {
-      // Show confirmation dialog using DaisyUI modal
-      const modal = document.createElement('dialog');
-      modal.className = 'modal modal-bottom sm:modal-middle';
-      modal.innerHTML = `
-        <div class="modal-box">
-          <h3 class="font-bold text-lg">Remove from Favorites</h3>
-          <p class="py-4">Are you sure you want to remove this item from your favorites?</p>
-          <div class="modal-action">
-            <button class="btn btn-ghost" onclick="this.closest('dialog').close()">Cancel</button>
-            <button class="btn btn-error" onclick="confirmRemoveFavorite(${id}, this.closest('dialog'))">Remove</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.showModal();
-    };
-
-    // Function to handle the actual removal
-    window.confirmRemoveFavorite = function(id, modal) {
-      fetch(`{% url 'diary:update' pk=0 %}`.replace('0', id), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: new URLSearchParams({
-          'favorite': 'false',
-          'action': 'toggle_favorite'
-        })
-      })
-      .then(response => {
-        if (response.ok) {
-          // Remove the card from the view
-          const card = document.querySelector(`[data-favorite-id="${id}"]`);
-          if (card) {
-            card.remove();
-          }
-          // Show success toast
-          showToast('Removed from favorites', 'success');
-          // Reload favorites to update the view
-          loadFavorites();
-        } else {
-          throw new Error('Failed to remove from favorites');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showToast('Failed to remove from favorites', 'error');
-      })
-      .finally(() => {
-        modal.close();
-        modal.remove();
-      });
-    };
-
-    // Debug datetime-local value
-    const datetimeInput = document.querySelector('input[type="datetime-local"]');
-    console.log('Initial datetime-local value:', datetimeInput.value);
-    console.log('Form recorded_at value:', '{{ form.recorded_at.value|date:"Y-m-d\TH:i" }}');
-    console.log('User timezone:', '{{ request.user.timezone }}');
   });
 </script>
 {% endblock %}
-{% endblock %}
+{% endblock %} 
