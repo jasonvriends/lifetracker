@@ -12,10 +12,11 @@ class Diary(models.Model):
         related_name="diary_entries"
     )
     title = models.CharField(max_length=255)
-    content = models.TextField()
+    content = models.TextField(blank=True)  # Make content optional
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     recorded_at = models.DateTimeField(default=timezone.now)
+    favorite = models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = "Diary Entries"

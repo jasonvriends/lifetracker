@@ -21,16 +21,29 @@ class DiaryForm(forms.ModelForm):
     
     title = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-        max_length=255
+        max_length=255,
+        label="Name"
     )
     
     content = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 10}),
+        widget=forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 3}),
+        label="Notes",
+        required=False,
+        help_text="Optional notes for this entry"
+    )
+    
+    favorite = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'toggle toggle-primary',
+            'role': 'switch',
+        }),
+        label="Favorite"
     )
     
     class Meta:
         model = Diary
-        fields = ["recorded_at", "title", "content"]
+        fields = ["recorded_at", "title", "content", "favorite"]
     
     def __init__(self, user=None, *args, **kwargs):
         """Initialize the form with the user to set the default date and time."""

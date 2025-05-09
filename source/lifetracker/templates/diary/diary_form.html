@@ -23,7 +23,7 @@
   <!-- Form Card -->
   <div class="card bg-base-100 shadow-lg">
     <div class="card-body">
-      <form method="post" class="space-y-6">
+      <form method="post" novalidate>
         {% csrf_token %}
         {% if original_date %}
         <input type="hidden" name="date" value="{{ original_date }}">
@@ -80,6 +80,19 @@
             </label>
           {% endif %}
         </div>
+
+        <!-- Favorite Toggle -->
+        <div class="form-control w-full mt-4">
+          <label class="label cursor-pointer justify-start gap-4">
+            <span class="label-text">{{ form.favorite.label }}</span>
+            {{ form.favorite }}
+          </label>
+          {% if form.favorite.errors %}
+            <label class="label">
+              <span class="label-text-alt text-error">{{ form.favorite.errors.0 }}</span>
+            </label>
+          {% endif %}
+        </div>
         
         <!-- Form Actions -->
         <div class="flex justify-end gap-2 mt-6">
@@ -111,6 +124,14 @@
       const minutes = String(now.getMinutes()).padStart(2, '0');
       datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
+
+    // Prevent form submission on Enter key
+    const form = document.querySelector('form');
+    form.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+      }
+    });
   });
 </script>
 {% endblock %}
